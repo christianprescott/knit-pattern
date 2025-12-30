@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+      #inputContainer {
+        display: flex;
+      }
+      #stitchInput {
+        flex: 1;
+        min-height: 96px;
+      }
+      #colorInputs {
+        flex: 1;
+      }
+
+      #stitchContainer {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(var(--cols, 4), 1fr);
+        gap: 0;
+
+        background-color: #bbb;
+      }
+      .stitch {
+        aspect-ratio: 1 / 1;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="inputContainer">
+      <textarea id="stitchInput" onkeyup="onTextChange()"></textarea>
+      <div id="colorInputs"></div>
+    </div>
+
+    <div id="stitchContainer">
+    </div>
+
+    <script>
+      function onTextChange() {
+        reset()
+        generate()
+      }
+
+      function reset() {
+        document.getElementById('stitchContainer').innerHTML = ''
+      }
+
+      function generate() {
+        const input = document.getElementById('stitchInput').value
+
+        // Parse grid
+        const rows = input.split("\n").map((row) => {
+          return row.split(/[, ]/).filter((word) => word.length > 0)
+        })
+        console.log(rows)
+
+        // Max length
+        const maxLength = Math.max(...rows.map((r) => r.length))
+
+        // Unique colors
+        const colors = [...new Set(rows.flat())]
+        colors.forEach((colorKey, i) => {
+          const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+          const style = document.createElement('style');
+          style.textContent = `.color_${colorKey} { background-color: ${randomColor}; }`;
+          document.head.appendChild(style);
+        })
+
+        const container = document.getElementById('stitchContainer')
+        container.style.setProperty('--cols', maxLength);
+        rows.forEach((row) => {
+          row.forEach((column) => {
+            const cell = document.createElement('div')
+            cell.setAttribute('class', 'stitch color_' + column)
+            container.append(cell)
+          })
+          for (let x = row.length; x < maxLength; x++) {
+            const cell = document.createElement('div')
+            cell.setAttribute('class', 'stitch')
+            container.append(cell)
+          }
+        })
+      }
+      generate()
+    </script>
+  </body>
+</html>
