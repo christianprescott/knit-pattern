@@ -38,17 +38,22 @@
 
     <script>
       function onTextChange() {
+        const input = document.getElementById('stitchInput').value
+        const params = new URLSearchParams(window.location.search)
+        params.set('stitches', input)
+        const baseUrl = window.location.href.split('?')[0]
+        const newUrl = baseUrl + '?' + params.toString()
+        history.replaceState(null, '', newUrl)
+
         reset()
-        generate()
+        generate(input)
       }
 
       function reset() {
         document.getElementById('stitchContainer').innerHTML = ''
       }
 
-      function generate() {
-        const input = document.getElementById('stitchInput').value
-
+      function generate(input) {
         // Parse grid
         const rows = input.split("\n").map((row) => {
           return row.split(/[, ]/).filter((word) => word.length > 0)
@@ -82,7 +87,18 @@
           }
         })
       }
-      generate()
+
+      // Initialize textarea from URL parameter or default
+      const params = new URLSearchParams(window.location.search)
+      const stitchInput = document.getElementById('stitchInput')
+      const stitchesParam = params.get('stitches')
+      if (stitchesParam) {
+        stitchInput.value = stitchesParam
+      } else {
+        stitchInput.value = "A A A B A A A B\nA A B A A A B A\nA B A A A B A A\nB A A A B A A A\n"
+      }
+
+      generate(stitchInput.value)
     </script>
   </body>
 </html>
