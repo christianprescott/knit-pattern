@@ -67,18 +67,17 @@
 
         // Select default colors
         const colors = [...new Set(stitches.flat())].sort()
-        colors.forEach((colorKey, i) => {
+        const colorMap = Object.fromEntries(colors.map((colorKey, i) => {
           const color = Math.floor((i / colors.length) * 8 + 4).toString(16);
-          const style = document.createElement('style');
-          style.textContent = `.color_${colorKey} { background-color: #${color}${color}${color}; }`;
-          document.head.appendChild(style);
-        })
+          return [`--color-${colorKey}`, `#${color}${color}${color}`]
+        }))
 
         const stitchCells = stitches.map((row, i) => {
           const cells = row.map((column, j) => {
             return createElement('div', {
               key: i + '_' + j,
-              className: `stitch color_${column}`
+              className: 'stitch',
+              style: { backgroundColor: `var(--color-${column})`}
             })
           })
           // Add additional cells to match length of longest row
@@ -102,7 +101,10 @@
           ),
           createElement('div', {
               id: 'stitchContainer',
-              style: { gridTemplateColumns: `repeat(${maxLength}, 1fr)` }
+              style: {
+                ...colorMap,
+                gridTemplateColumns: `repeat(${maxLength}, 1fr)`,
+              }
             },
             stitchCells
           ),
