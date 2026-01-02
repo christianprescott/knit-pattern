@@ -1,0 +1,12 @@
+{
+  "name": "knit-pattern",
+  "version": "1.0.0",
+  "description": "Knit pattern generator",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  }
+}

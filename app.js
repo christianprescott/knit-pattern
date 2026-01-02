@@ -13,11 +13,15 @@ for (const [key, value] of params.entries()) {
   }
 }
 
-const parseStitches = (input) => {
+parseStitches = (input) => {
   // Parse grid
   const rows = input.split("\n").map((row) => {
-    return row.split(/[, ]/).filter((word) => word.length > 0)
-  })
+    return row.split(/[,]/)
+      .map((s) => Array.from(s))
+      .flat()
+      .map((s) => s.trim())
+      .filter((word) => word.length > 0)
+  }).filter((row) => row.length > 0)
   return rows
 }
 
@@ -117,9 +121,3 @@ function App() {
     ),
   )
 }
-
-ReactDOM.createRoot(
-  document.getElementById('appContainer')
-).render(
-  createElement(App)
-)
