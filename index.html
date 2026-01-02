@@ -1,8 +1,8 @@
 <!doctype html>
 <html>
   <head>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/react@18.3/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18.3/umd/react-dom.production.min.js"></script>
     <style>
       #inputContainer {
         display: flex;
@@ -31,91 +31,6 @@
   <body>
     <div id="appContainer"></div>
 
-    <script>
-      // Initialize textarea from URL parameter or default
-      const params = new URLSearchParams(window.location.search)
-      const defaultInput = params.has('stitches') ?
-        params.get('stitches') :
-        "A A A B A A A B\nA A B A A A B A\nA B A A A B A A\nB A A A B A A A\n"
-
-      const { createElement } = React
-
-      function App() {
-        const parse = (input) => {
-          // Parse grid
-          const rows = input.split("\n").map((row) => {
-            return row.split(/[, ]/).filter((word) => word.length > 0)
-          })
-          return rows
-        }
-
-        const [stitches, setStitches] = React.useState(parse(defaultInput))
-
-        const onValueChanged = (v) => {
-          const input = v.target.value
-          const params = new URLSearchParams(window.location.search)
-          params.set('stitches', input)
-          const baseUrl = window.location.href.split('?')[0]
-          const newUrl = baseUrl + '?' + params.toString()
-          history.replaceState(null, '', newUrl)
-
-          setStitches(parse(input))
-        }
-
-        // Max row length
-        const maxLength = Math.max(...stitches.map((r) => r.length))
-
-        // Select default colors
-        const colors = [...new Set(stitches.flat())].sort()
-        const colorMap = Object.fromEntries(colors.map((colorKey, i) => {
-          const color = Math.floor((i / colors.length) * 8 + 4).toString(16);
-          return [`--color-${colorKey}`, `#${color}${color}${color}`]
-        }))
-
-        const stitchCells = stitches.map((row, i) => {
-          const cells = row.map((column, j) => {
-            return createElement('div', {
-              key: i + '_' + j,
-              className: 'stitch',
-              style: { backgroundColor: `var(--color-${column})`}
-            })
-          })
-          // Add additional cells to match length of longest row
-          for (let j = cells.length; j < maxLength; j++) {
-            cells.push(createElement('div', {
-              key: i + '_' + (cells.length + j),
-              className: `stitch`
-            }))
-          }
-          return cells
-        })
-
-        return createElement('div', {},
-          createElement('div', { id: 'inputContainer' },
-            createElement('textarea', {
-              id: 'stitchInput',
-              defaultValue: defaultInput,
-              onInput: onValueChanged
-            }),
-            createElement('div', { id: 'colorInputs' }),
-          ),
-          createElement('div', {
-              id: 'stitchContainer',
-              style: {
-                ...colorMap,
-                gridTemplateColumns: `repeat(${maxLength}, 1fr)`,
-              }
-            },
-            stitchCells
-          ),
-        )
-      }
-
-      ReactDOM.createRoot(
-        document.getElementById('appContainer')
-      ).render(
-        createElement(App)
-      )
-    </script>
+    <script src="app.js"></script>
   </body>
 </html>
