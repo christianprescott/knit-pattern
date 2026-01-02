@@ -4,28 +4,51 @@ const defaultInput = params.has('stitches') ?
   params.get('stitches') :
   "A A A B A A A B\nA A B A A A B A\nA B A A A B A A\nB A A A B A A A\n"
 
+// Initialize custom colors
+const defaultCustomColors = {}
+for (const [key, value] of params.entries()) {
+  if (key.startsWith('color_')) {
+    const colorKey = key.substring(6) // Remove 'color_' prefix
+    defaultCustomColors[`--color-${colorKey}`] = value
+  }
+}
+
+const parseStitches = (input) => {
+  // Parse grid
+  const rows = input.split("\n").map((row) => {
+    return row.split(/[, ]/).filter((word) => word.length > 0)
+  })
+  return rows
+}
+
+const updateUrlParams = (updates) => {
+  const params = new URLSearchParams(window.location.search)
+  for (const [key, value] of Object.entries(updates)) {
+    params.set(key, value)
+  }
+  const baseUrl = window.location.href.split('?')[0]
+  const newUrl = baseUrl + '?' + params.toString()
+  history.replaceState(null, '', newUrl)
+}
+
 const { createElement } = React
 
 function App() {
-  const parse = (input) => {
-    // Parse grid
-    const rows = input.split("\n").map((row) => {
-      return row.split(/[, ]/).filter((word) => word.length > 0)
-    })
-    return rows
+  const [stitches, setStitches] = React.useState(parseStitches(defaultInput))
+  const [customColors, setCustomColors] = React.useState(defaultCustomColors)
+
+  const onInputChanged = (v) => {
+    const input = v.target.value
+    updateUrlParams({ stitches: input })
+    setStitches(parseStitches(input))
   }
 
-  const [stitches, setStitches] = React.useState(parse(defaultInput))
-
-  const onValueChanged = (v) => {
-    const input = v.target.value
-    const params = new URLSearchParams(window.location.search)
-    params.set('stitches', input)
-    const baseUrl = window.location.href.split('?')[0]
-    const newUrl = baseUrl + '?' + params.toString()
-    history.replaceState(null, '', newUrl)
-
-    setStitches(parse(input))
+  const onColorChanged = (colorKey, color) => {
+    updateUrlParams({ [`color_${colorKey}`]: color })
+    setCustomColors({
+      ...customColors,
+      [`--color-${colorKey}`]: color
+    })
   }
 
   // Max row length
@@ -56,19 +79,37 @@ function App() {
     return cells
   })
 
+  const colorInputs = colors.map((colorKey) => {
+    const cssVarName = `--color-${colorKey}`
+    const currentColor = customColors[cssVarName] || colorMap[cssVarName]
+
+    return createElement('div', { key: colorKey },
+      createElement('label', { for: `color_${colorKey}`}, `${colorKey}:`),
+      createElement('input', {
+        id: `color_${colorKey}`,
+        type: 'color',
+        value: currentColor,
+        onChange: (e) => onColorChanged(colorKey, e.target.value)
+      })
+    )
+  })
+
   return createElement('div', {},
     createElement('div', { id: 'inputContainer' },
       createElement('textarea', {
         id: 'stitchInput',
         defaultValue: defaultInput,
-        onInput: onValueChanged
+        onChange: onInputChanged
       }),
-      createElement('div', { id: 'colorInputs' }),
+      createElement('div', { id: 'colorInputs' },
+        colorInputs
+      ),
     ),
     createElement('div', {
         id: 'stitchContainer',
         style: {
           ...colorMap,
+          ...customColors,
           gridTemplateColumns: `repeat(${maxLength}, 1fr)`,
         }
       },
