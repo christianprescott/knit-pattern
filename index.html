@@ -35,11 +35,38 @@
 
     <script src="app.js"></script>
     <script>
-      ReactDOM.createRoot(
-        document.getElementById('appContainer')
-      ).render(
-        createElement(App)
-      )
+      const params = new URLSearchParams(window.location.search)
+
+      // Initialize custom colors
+      const customColors = {}
+      for (const [key, value] of params.entries()) {
+        if (key.startsWith('color_')) {
+          const colorKey = key.substring(6) // Remove 'color_' prefix
+          customColors[`--color-${colorKey}`] = value
+        }
+      }
+
+      // Initialize textarea from URL parameter or default
+      (async () => {
+        if (params.has('stitches')) {
+          const input = params.get('stitches')
+          return decodeGzip(input).catch(() => {
+            // If the input fails to decode, use it as is.
+            return input
+          })
+        } else {
+          return "A A A B A A A B\nA A B A A A B A\nA B A A A B A A\nB A A A B A A A\n"
+        }
+      })().then((defaultInput) => {
+        ReactDOM.createRoot(
+          document.getElementById('appContainer')
+        ).render(
+          createElement(App, {
+            defaultInput,
+            defaultCustomColors: customColors
+          })
+        )
+      })
     </script>
   </body>
 </html>

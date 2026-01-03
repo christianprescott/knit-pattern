@@ -1,16 +1,17 @@
-// Initialize textarea from URL parameter or default
-const params = new URLSearchParams(window.location.search)
-const defaultInput = params.has('stitches') ?
-  params.get('stitches') :
-  "A A A B A A A B\nA A B A A A B A\nA B A A A B A A\nB A A A B A A A\n"
+encodeGzip = async (input) => {
+  const inStream = new Blob([input]).stream()
+  const stream = inStream.pipeThrough(new CompressionStream('gzip'))
+  const compressed = await new Response(stream).arrayBuffer()
+  const bytes = new Uint8Array(compressed)
+  return btoa(String.fromCharCode(...bytes))
+}
 
-// Initialize custom colors
-const defaultCustomColors = {}
-for (const [key, value] of params.entries()) {
-  if (key.startsWith('color_')) {
-    const colorKey = key.substring(6) // Remove 'color_' prefix
-    defaultCustomColors[`--color-${colorKey}`] = value
-  }
+decodeGzip = async (encoded) => {
+  const binary = atob(encoded)
+  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0))
+  const outStream = new Blob([bytes]).stream()
+  const stream = outStream.pipeThrough(new DecompressionStream('gzip'))
+  return await new Response(stream).text()
 }
 
 parseStitches = (input) => {
@@ -37,14 +38,16 @@ const updateUrlParams = (updates) => {
 
 const { createElement } = React
 
-function App() {
+function App({ defaultInput, defaultCustomColors }) {
   const [stitches, setStitches] = React.useState(parseStitches(defaultInput))
   const [customColors, setCustomColors] = React.useState(defaultCustomColors)
 
   const onInputChanged = (v) => {
     const input = v.target.value
-    updateUrlParams({ stitches: input })
     setStitches(parseStitches(input))
+    encodeGzip(input).then((encoded) => {
+      updateUrlParams({ stitches: encoded })
+    })
   }
 
   const onColorChanged = (colorKey, color) => {
