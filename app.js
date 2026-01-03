@@ -114,14 +114,22 @@ function App({ defaultInput, defaultCustomColors }) {
     return [`--color-${colorKey}`, `#${color}${color}${color}`]
   }))
 
-  const stitchClasses = 'aspect-square border border-zinc-300'
   const stitchCells = stitches.map((row, i) => {
+    // The last row has 1:1 aspect ratio to account for intentional overflow used in earlier rows.
+    const stitchClasses = 'min-h-0 overflow-visible ' + (i == stitches.length - 1 ? 'aspect-square' : 'aspect-4/3' )
     const cells = row.map((column, j) => {
       return createElement('div', {
         key: i + '_' + j,
         className: stitchClasses,
-        style: { backgroundColor: `var(--color-${column})`}
-      })
+      },
+        createElement('svg', {
+          viewBox: '0 0 24 24',
+          className: 'w-full stroke-1 stroke-zinc-300',
+          style: { fill: `var(--color-${column})` }
+        },
+          createElement('use', { href: '#stitch' })
+        )
+      )
     })
     // Add additional cells to match length of longest row
     for (let j = cells.length; j < maxLength; j++) {
@@ -185,7 +193,7 @@ function App({ defaultInput, defaultCustomColors }) {
       ),
     ),
     createElement('div', {
-        className: `transition-[width] w-${zoom}/6 grid gap-0 bg-zinc-400`,
+        className: `transition-[width] w-${zoom}/6 grid gap-0 bg-zinc-300`,
         style: {
           ...colorMap,
           ...customColors,
