@@ -185,7 +185,7 @@ function App({ defaultInput, defaultCustomColors }) {
       ),
     ),
     createElement('div', {
-        className: `w-${zoom}/6 grid gap-0 bg-zinc-400`,
+        className: `transition-[width] w-${zoom}/6 grid gap-0 bg-zinc-400`,
         style: {
           ...colorMap,
           ...customColors,
