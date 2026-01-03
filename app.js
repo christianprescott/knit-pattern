@@ -44,6 +44,45 @@ function Icon(name) {
   )
 }
 
+function ShareButton() {
+  const handleShare = () => {
+    const url = window.location.href
+
+    return navigator.share({
+      title: 'Knitpicker Pattern',
+      text: 'Check out this knit pattern!',
+      url: url
+    }).catch(err => {
+      // User cancelled the share or there was an error
+      if (err.name !== 'AbortError') {
+        console.error('Error sharing:', err)
+        return handleCopy(url)
+      }
+    })
+  }
+
+  const handleCopy = () => {
+    const url = window.location.href
+    return navigator.clipboard.writeText(url).catch(err => {
+      console.error('Failed to copy:', err)
+    })
+  }
+
+  const className = 'mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded flex items-center gap-2'
+  // Check if Web Share API is available (mobile devices)
+  if (navigator.share) {
+    return createElement('button', { className, onClick: handleShare },
+      Icon('share'),
+      'Share Pattern'
+    )
+  } else {
+    return createElement('button', { className, onClick: handleCopy },
+      Icon('content_copy'),
+      'Copy Pattern Link'
+    )
+  }
+}
+
 function App({ defaultInput, defaultCustomColors }) {
   const [stitches, setStitches] = React.useState(parseStitches(defaultInput))
   const [customColors, setCustomColors] = React.useState(defaultCustomColors)
@@ -121,12 +160,15 @@ function App({ defaultInput, defaultCustomColors }) {
           onChange: onInputChanged
         }),
       ),
-      createElement('div', { className: 'flex-1 p-4' },
+      createElement('div', { className: 'flex-1 p-4 flex flex-col' },
         createElement('h2', { className: 'text-2xl' },
           Icon('palette'),
           'Colors'
         ),
-        colorInputs
+        colorInputs,
+        createElement('div', { className: 'mt-auto self-end' },
+          ShareButton()
+        ),
       ),
     ),
     createElement('div', {
