@@ -36,11 +36,26 @@ const updateUrlParams = (updates) => {
   history.replaceState(null, '', newUrl)
 }
 
-const { createElement, useState } = React
+const { createElement, useState, useRef, useEffect } = React
 
 function Icon(name) {
   return createElement('span', { className: 'material-symbols-outlined' },
     name
+  )
+}
+
+function Cell({ colorKey, ...props }) {
+  return createElement('div', {
+      className: 'min-h-0 overflow-visible aspect-4/3',
+      ...props,
+    },
+    colorKey && createElement('svg', {
+      viewBox: '0 0 24 24',
+      className: 'w-full stroke-1 stroke-zinc-300',
+      style: { fill: `var(--color-${colorKey})` }
+    },
+      createElement('use', { href: '#stitch' })
+    )
   )
 }
 
@@ -87,6 +102,7 @@ function App({ defaultInput, defaultCustomColors }) {
   const [stitches, setStitches] = useState(parseStitches(defaultInput))
   const [customColors, setCustomColors] = useState(defaultCustomColors)
   const [zoom, setZoom] = useState(6)
+  const colorInputsRef = useRef(null)
 
   const onInputChanged = (v) => {
     const input = v.target.value
@@ -104,6 +120,55 @@ function App({ defaultInput, defaultCustomColors }) {
     })
   }
 
+  // Initialize Sortable.js for drag-and-drop color swapping
+  useEffect(() => {
+    if (colorInputsRef.current) {
+      const instance = Sortable.create(colorInputsRef.current, {
+        draggable: '.color-input-item',
+        handle: '.drag-handle',
+        animation: 150,
+        ghostClass: 'opacity-40',
+        swap: true,
+        swapClass: 'opacity-40',
+        onEnd: (evt) => {
+          const { item, swapItem } = evt
+          // This event still fires when drag is dropped on itself, but no
+          // swap is necessary.
+          if (item === swapItem) return
+
+          // Get color keys from the items
+          const colorKeyFrom = item.getAttribute('data-color-key')
+          const colorKeyTo = swapItem.getAttribute('data-color-key')
+
+          // Get current colors
+          const cssVarNameFrom = `--color-${colorKeyFrom}`
+          const cssVarNameTo = `--color-${colorKeyTo}`
+
+          setCustomColors((prev) => {
+            const colorFrom = prev[cssVarNameFrom] || colorMap[cssVarNameFrom]
+            const colorTo = prev[cssVarNameTo] || colorMap[cssVarNameTo]
+
+            // Update URL params
+            updateUrlParams({
+              [`color_${colorKeyFrom}`]: colorTo,
+              [`color_${colorKeyTo}`]: colorFrom
+            })
+
+            // Swap the colors
+            return {
+              ...prev,
+              [cssVarNameFrom]: colorTo,
+              [cssVarNameTo]: colorFrom
+            }
+          })
+        }
+      })
+
+      // Tear down the Sortable instance before creating a new one
+      return () => instance.destroy()
+    }
+  }, [stitches])
+
   // Max row length
   const maxLength = Math.max(...stitches.map((r) => r.length))
 
@@ -116,44 +181,44 @@ function App({ defaultInput, defaultCustomColors }) {
 
   const stitchCells = stitches.map((row, i) => {
     // The last row has 1:1 aspect ratio to account for intentional overflow used in earlier rows.
-    const stitchClasses = 'min-h-0 overflow-visible ' + (i == stitches.length - 1 ? 'aspect-square' : 'aspect-4/3' )
     const cells = row.map((column, j) => {
-      return createElement('div', {
-        key: i + '_' + j,
-        className: stitchClasses,
-      },
-        createElement('svg', {
-          viewBox: '0 0 24 24',
-          className: 'w-full stroke-1 stroke-zinc-300',
-          style: { fill: `var(--color-${column})` }
-        },
-          createElement('use', { href: '#stitch' })
-        )
-      )
+      return Cell({ key: i + '_' + j, colorKey: column })
     })
     // Add additional cells to match length of longest row
     for (let j = cells.length; j < maxLength; j++) {
-      cells.push(createElement('div', {
-        key: i + '_' + (cells.length + j),
-        className: stitchClasses
-      }))
+      cells.push(Cell({ key: i + '_' + (cells.length + j) }))
     }
     return cells
   })
 
-  const colorInputs = colors.map((colorKey) => {
+  const colorRows = colors.flatMap((colorKey) => {
     const cssVarName = `--color-${colorKey}`
     const currentColor = customColors[cssVarName] || colorMap[cssVarName]
 
-    return createElement('div', { key: colorKey, className: 'flex items-center' },
-      createElement('input', {
-        id: `color_${colorKey}`,
-        type: 'color',
-        value: currentColor,
-        onChange: (e) => onColorChanged(colorKey, e.target.value)
-      }),
-      createElement('label', { for: `color_${colorKey}`}, colorKey),
-    )
+    return [
+      createElement('label', {
+        key: `label-${colorKey}`,
+        for: `color_${colorKey}`,
+        className: 'flex items-center'
+      }, colorKey),
+      createElement('div', {
+        key: `input-${colorKey}`,
+        className: 'color-input-item flex items-center gap-2 p-1',
+        'data-color-key': colorKey
+      },
+        createElement('input', {
+          id: `color_${colorKey}`,
+          type: 'color',
+          value: currentColor,
+          onChange: (e) => onColorChanged(colorKey, e.target.value)
+        }),
+        createElement('div', {
+            className: 'flex items-center drag-handle cursor-grab active:cursor-grabbing select-none text-lg'
+          },
+          Icon('drag_indicator')
+        ),
+      )
+    ]
   })
 
   return createElement('div', {},
@@ -174,7 +239,13 @@ function App({ defaultInput, defaultCustomColors }) {
           Icon('palette'),
           'Colors'
         ),
-        colorInputs,
+        createElement('div', {
+          ref: colorInputsRef,
+          className: 'grid gap-x-2 gap-y-1',
+          style: { gridTemplateColumns: 'auto 1fr' }
+        },
+          colorRows
+        ),
         createElement('div', { className: 'mt-auto self-end' },
           ShareButton(),
           createElement('div', { className: 'mt-4 flex items-center gap-2' },
