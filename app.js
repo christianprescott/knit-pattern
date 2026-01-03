@@ -38,6 +38,12 @@ const updateUrlParams = (updates) => {
 
 const { createElement } = React
 
+function Icon(name) {
+  return createElement('span', { className: 'material-symbols-outlined' },
+    name
+  )
+}
+
 function App({ defaultInput, defaultCustomColors }) {
   const [stitches, setStitches] = React.useState(parseStitches(defaultInput))
   const [customColors, setCustomColors] = React.useState(defaultCustomColors)
@@ -68,11 +74,12 @@ function App({ defaultInput, defaultCustomColors }) {
     return [`--color-${colorKey}`, `#${color}${color}${color}`]
   }))
 
+  const stitchClasses = 'aspect-square border border-zinc-300'
   const stitchCells = stitches.map((row, i) => {
     const cells = row.map((column, j) => {
       return createElement('div', {
         key: i + '_' + j,
-        className: 'stitch',
+        className: stitchClasses,
         style: { backgroundColor: `var(--color-${column})`}
       })
     })
@@ -80,7 +87,7 @@ function App({ defaultInput, defaultCustomColors }) {
     for (let j = cells.length; j < maxLength; j++) {
       cells.push(createElement('div', {
         key: i + '_' + (cells.length + j),
-        className: `stitch`
+        className: stitchClasses
       }))
     }
     return cells
@@ -90,30 +97,40 @@ function App({ defaultInput, defaultCustomColors }) {
     const cssVarName = `--color-${colorKey}`
     const currentColor = customColors[cssVarName] || colorMap[cssVarName]
 
-    return createElement('div', { key: colorKey },
-      createElement('label', { for: `color_${colorKey}`}, `${colorKey}:`),
+    return createElement('div', { key: colorKey, className: 'flex items-center' },
       createElement('input', {
         id: `color_${colorKey}`,
         type: 'color',
         value: currentColor,
         onChange: (e) => onColorChanged(colorKey, e.target.value)
-      })
+      }),
+      createElement('label', { for: `color_${colorKey}`}, colorKey),
     )
   })
 
   return createElement('div', {},
-    createElement('div', { id: 'inputContainer' },
-      createElement('textarea', {
-        id: 'stitchInput',
-        defaultValue: defaultInput,
-        onChange: onInputChanged
-      }),
-      createElement('div', { id: 'colorInputs' },
+    createElement('div', { className: 'flex' },
+      createElement('div', { className: 'flex-1 p-4' },
+        createElement('h2', { className: 'text-2xl' },
+          Icon('edit'),
+          'Pattern'
+        ),
+        createElement('textarea', {
+          className: 'font-mono w-full min-h-48',
+          defaultValue: defaultInput,
+          onChange: onInputChanged
+        }),
+      ),
+      createElement('div', { className: 'flex-1 p-4' },
+        createElement('h2', { className: 'text-2xl' },
+          Icon('palette'),
+          'Colors'
+        ),
         colorInputs
       ),
     ),
     createElement('div', {
-        id: 'stitchContainer',
+        className: 'w-full grid gap-0 bg-zinc-400',
         style: {
           ...colorMap,
           ...customColors,
