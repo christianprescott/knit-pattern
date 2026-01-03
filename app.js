@@ -36,7 +36,7 @@ const updateUrlParams = (updates) => {
   history.replaceState(null, '', newUrl)
 }
 
-const { createElement } = React
+const { createElement, useState } = React
 
 function Icon(name) {
   return createElement('span', { className: 'material-symbols-outlined' },
@@ -84,8 +84,9 @@ function ShareButton() {
 }
 
 function App({ defaultInput, defaultCustomColors }) {
-  const [stitches, setStitches] = React.useState(parseStitches(defaultInput))
-  const [customColors, setCustomColors] = React.useState(defaultCustomColors)
+  const [stitches, setStitches] = useState(parseStitches(defaultInput))
+  const [customColors, setCustomColors] = useState(defaultCustomColors)
+  const [zoom, setZoom] = useState(6)
 
   const onInputChanged = (v) => {
     const input = v.target.value
@@ -167,12 +168,24 @@ function App({ defaultInput, defaultCustomColors }) {
         ),
         colorInputs,
         createElement('div', { className: 'mt-auto self-end' },
-          ShareButton()
+          ShareButton(),
+          createElement('div', { className: 'mt-4 flex items-center gap-2' },
+            Icon('zoom_in'),
+            createElement('input', {
+              type: 'range',
+              min: '1',
+              max: '6',
+              step: '1',
+              value: zoom,
+              onChange: (e) => setZoom(parseInt(e.target.value)),
+              className: 'w-32'
+            })
+          )
         ),
       ),
     ),
     createElement('div', {
-        className: 'w-full grid gap-0 bg-zinc-400',
+        className: `w-${zoom}/6 grid gap-0 bg-zinc-400`,
         style: {
           ...colorMap,
           ...customColors,
