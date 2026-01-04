@@ -116,7 +116,7 @@ function App({ defaultInput, defaultCustomColors }) {
     updateUrlParams({ [`color_${colorKey}`]: color })
     setCustomColors({
       ...customColors,
-      [`--color-${colorKey}`]: color
+      [colorKey]: color
     })
   }
 
@@ -140,13 +140,10 @@ function App({ defaultInput, defaultCustomColors }) {
           const colorKeyFrom = item.getAttribute('data-color-key')
           const colorKeyTo = swapItem.getAttribute('data-color-key')
 
-          // Get current colors
-          const cssVarNameFrom = `--color-${colorKeyFrom}`
-          const cssVarNameTo = `--color-${colorKeyTo}`
 
           setCustomColors((prev) => {
-            const colorFrom = prev[cssVarNameFrom] || colorMap[cssVarNameFrom]
-            const colorTo = prev[cssVarNameTo] || colorMap[cssVarNameTo]
+            const colorFrom = prev[colorKeyFrom] || defaultColors[colorKeyFrom]
+            const colorTo = prev[colorKeyTo] || defaultColors[colorKeyTo]
 
             // Update URL params
             updateUrlParams({
@@ -157,8 +154,8 @@ function App({ defaultInput, defaultCustomColors }) {
             // Swap the colors
             return {
               ...prev,
-              [cssVarNameFrom]: colorTo,
-              [cssVarNameTo]: colorFrom
+              [colorKeyFrom]: colorTo,
+              [colorKeyTo]: colorFrom
             }
           })
         }
@@ -174,9 +171,9 @@ function App({ defaultInput, defaultCustomColors }) {
 
   // Select default colors
   const colors = [...new Set(stitches.flat())].sort()
-  const colorMap = Object.fromEntries(colors.map((colorKey, i) => {
+  const defaultColors = Object.fromEntries(colors.map((colorKey, i) => {
     const color = Math.floor((i / colors.length) * 8 + 4).toString(16);
-    return [`--color-${colorKey}`, `#${color}${color}${color}`]
+    return [colorKey, `#${color}${color}${color}`]
   }))
 
   const stitchCells = stitches.map((row, i) => {
@@ -195,8 +192,7 @@ function App({ defaultInput, defaultCustomColors }) {
   }
 
   const colorRows = colors.flatMap((colorKey) => {
-    const cssVarName = `--color-${colorKey}`
-    const currentColor = customColors[cssVarName] || colorMap[cssVarName]
+    const currentColor = customColors[colorKey] || defaultColors[colorKey]
 
     return [
       createElement('label', {
@@ -269,8 +265,10 @@ function App({ defaultInput, defaultCustomColors }) {
     createElement('div', {
         className: `transition-[width] w-${zoom}/6 grid gap-0 bg-zinc-300`,
         style: {
-          ...colorMap,
-          ...customColors,
+          ...Object.fromEntries(
+            Object.entries({ ...defaultColors, ...customColors })
+            .map(([k, v]) => [`--color-${k}`, v]),
+          ),
           gridTemplateColumns: `repeat(${maxLength}, 1fr)`,
         }
       },

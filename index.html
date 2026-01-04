@@ -45,7 +45,7 @@
       for (const [key, value] of params.entries()) {
         if (key.startsWith('color_')) {
           const colorKey = key.substring(6) // Remove 'color_' prefix
-          customColors[`--color-${colorKey}`] = value
+          customColors[colorKey] = value
         }
       }
 
