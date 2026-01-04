@@ -120,6 +120,13 @@ function App({ defaultInput, defaultCustomColors }) {
     })
   }
 
+  // Select default colors
+  const colors = [...new Set(stitches.flat())].sort()
+  const defaultColors = Object.fromEntries(colors.map((colorKey, i) => {
+    const color = Math.floor((i / colors.length) * 128 + 64).toString(16).padStart(2, '0')
+    return [colorKey, `#${color}${color}${color}`]
+  }))
+
   // Initialize Sortable.js for drag-and-drop color swapping
   useEffect(() => {
     if (colorInputsRef.current) {
@@ -139,7 +146,6 @@ function App({ defaultInput, defaultCustomColors }) {
           // Get color keys from the items
           const colorKeyFrom = item.getAttribute('data-color-key')
           const colorKeyTo = swapItem.getAttribute('data-color-key')
-
 
           setCustomColors((prev) => {
             const colorFrom = prev[colorKeyFrom] || defaultColors[colorKeyFrom]
@@ -168,13 +174,6 @@ function App({ defaultInput, defaultCustomColors }) {
 
   // Max row length
   const maxLength = Math.max(...stitches.map((r) => r.length))
-
-  // Select default colors
-  const colors = [...new Set(stitches.flat())].sort()
-  const defaultColors = Object.fromEntries(colors.map((colorKey, i) => {
-    const color = Math.floor((i / colors.length) * 8 + 4).toString(16);
-    return [colorKey, `#${color}${color}${color}`]
-  }))
 
   const stitchCells = stitches.map((row, i) => {
     const cells = row.map((column, j) => {
