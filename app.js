@@ -180,7 +180,6 @@ function App({ defaultInput, defaultCustomColors }) {
   }))
 
   const stitchCells = stitches.map((row, i) => {
-    // The last row has 1:1 aspect ratio to account for intentional overflow used in earlier rows.
     const cells = row.map((column, j) => {
       return Cell({ key: i + '_' + j, colorKey: column })
     })
@@ -190,6 +189,10 @@ function App({ defaultInput, defaultCustomColors }) {
     }
     return cells
   })
+  // Add a row of empty cells as background for the last row's overflow
+  for (let j = 0; j < maxLength; j++) {
+    stitchCells.push(Cell({ className: 'aspect-4/1' }))
+  }
 
   const colorRows = colors.flatMap((colorKey) => {
     const cssVarName = `--color-${colorKey}`
