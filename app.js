@@ -78,9 +78,9 @@ function Zoom({ onChange }) {
       max: '6',
       step: '1',
       onChange: (e) => onChange(parseInt(e.target.value)),
-      className: 'range range-sm'
+      className: 'range range-sm range-secondary'
     }),
-    createElement('div', { className: 'relative flex justify-between'},
+    createElement('div', { className: 'relative flex justify-between text-secondary'},
       createElement('span', {}, Icon('zoom_out')),
       createElement('span', {}, Icon('zoom_in')),
       createElement('div', { className: 'absolute left-0 right-0 flex justify-between px-2'},
@@ -95,9 +95,9 @@ function Zoom({ onChange }) {
   )
 }
 
-function Button(props, ...children) {
+function Button({ size, color, ...props }, ...children) {
   return createElement('button', {
-      className: 'px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-zinc-300 text-white rounded flex items-center gap-2',
+      className: `btn btn-${size || 'md'} btn-${color || 'neutral'}`,
       ...props
     },
     ...children
@@ -130,13 +130,13 @@ function ShareButton() {
 
   // Check if Web Share API is available (mobile devices)
   if (navigator.share) {
-    return Button({ onClick: handleShare },
+    return Button({ color: 'primary', onClick: handleShare },
       Icon('share'),
       'Share Pattern'
     )
   } else {
-    return Button({ onClick: handleCopy },
-      Icon('content_copy'),
+    return Button({ color: 'primary', onClick: handleCopy },
+      Icon('link'),
       'Copy Pattern Link'
     )
   }
@@ -253,17 +253,18 @@ function App({ defaultInput, defaultCustomColors }) {
       createElement('label', {
         key: `label-${colorKey}`,
         for: `color_${colorKey}`,
-        className: 'flex items-center'
+        className: 'label flex items-center'
       }, colorKey),
       createElement('div', {
         key: `input-${colorKey}`,
-        className: 'color-input-item flex items-center gap-2 p-1',
+        className: 'input color-input-item flex items-center w-36 p-1',
         'data-color-key': colorKey
       },
         createElement('input', {
           id: `color_${colorKey}`,
           type: 'color',
           value: currentColor,
+          className: 'rounded-sm border-0',
           onChange: (e) => onColorChanged(colorKey, e.target.value)
         }),
         createElement('div', {
@@ -283,7 +284,7 @@ function App({ defaultInput, defaultCustomColors }) {
           'Pattern'
         ),
         createElement('textarea', {
-          className: 'font-mono w-full min-h-48',
+          className: 'textarea font-mono w-full min-h-48',
           defaultValue: defaultInput,
           onChange: onInputChanged
         }),
@@ -295,6 +296,8 @@ function App({ defaultInput, defaultCustomColors }) {
             'Colors'
           ),
           Button({
+              size: 'sm',
+              color: 'secondary',
               onClick: () => {
                 deleteUrlParams((k) => k.startsWith('color_'))
                 setCustomColors({})
@@ -312,9 +315,9 @@ function App({ defaultInput, defaultCustomColors }) {
         },
           colorRows
         ),
-        createElement('div', { className: 'mt-auto self-end' },
+        createElement('div', { className: 'mt-auto flex flex-col items-end self-end' },
           ShareButton(),
-          Zoom({ onChange: (value) => setZoom(value), })
+          Zoom({ onChange: (value) => setZoom(value) })
         ),
       ),
     ),
