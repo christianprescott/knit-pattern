@@ -31,6 +31,17 @@ const updateUrlParams = (updates) => {
   for (const [key, value] of Object.entries(updates)) {
     params.set(key, value)
   }
+
+  const baseUrl = window.location.href.split('?')[0]
+  const newUrl = baseUrl + '?' + params.toString()
+  history.replaceState(null, '', newUrl)
+}
+
+const deleteUrlParams = (func) => {
+  const params = new URLSearchParams(window.location.search)
+  const keys = [...params.keys()].filter(func)
+  keys.forEach((k) => params.delete(k))
+
   const baseUrl = window.location.href.split('?')[0]
   const newUrl = baseUrl + '?' + params.toString()
   history.replaceState(null, '', newUrl)
@@ -59,6 +70,15 @@ function Cell({ colorKey, ...props }) {
   )
 }
 
+function Button(props, ...children) {
+  return createElement('button', {
+      className: 'px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-zinc-300 text-white rounded flex items-center gap-2',
+      ...props
+    },
+    ...children
+  )
+}
+
 function ShareButton() {
   const handleShare = () => {
     const url = window.location.href
@@ -83,15 +103,14 @@ function ShareButton() {
     })
   }
 
-  const className = 'mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded flex items-center gap-2'
   // Check if Web Share API is available (mobile devices)
   if (navigator.share) {
-    return createElement('button', { className, onClick: handleShare },
+    return Button({ onClick: handleShare },
       Icon('share'),
       'Share Pattern'
     )
   } else {
-    return createElement('button', { className, onClick: handleCopy },
+    return Button({ onClick: handleCopy },
       Icon('content_copy'),
       'Copy Pattern Link'
     )
@@ -234,7 +253,7 @@ function App({ defaultInput, defaultCustomColors }) {
   return createElement('div', {},
     createElement('div', { className: 'flex' },
       createElement('div', { className: 'flex-1 p-4' },
-        createElement('h2', { className: 'text-2xl' },
+        createElement('h2', { className: 'text-3xl' },
           Icon('edit'),
           'Pattern'
         ),
@@ -245,9 +264,21 @@ function App({ defaultInput, defaultCustomColors }) {
         }),
       ),
       createElement('div', { className: 'flex-1 p-4 flex flex-col' },
-        createElement('h2', { className: 'text-2xl' },
-          Icon('palette'),
-          'Colors'
+        createElement('div', { className: 'flex justify-between items-start' },
+          createElement('h2', { className: 'text-3xl' },
+            Icon('palette'),
+            'Colors'
+          ),
+          Button({
+              onClick: () => {
+                deleteUrlParams((k) => k.startsWith('color_'))
+                setCustomColors({})
+              },
+              disabled: Object.keys(customColors).length === 0
+            },
+            Icon('format_color_reset'),
+            'Reset'
+          )
         ),
         createElement('div', {
           ref: colorInputsRef,
