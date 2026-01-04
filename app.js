@@ -70,6 +70,31 @@ function Cell({ colorKey, ...props }) {
   )
 }
 
+function Zoom({ onChange }) {
+  return createElement('div', { className: 'w-full' },
+    createElement('input', {
+      type: 'range',
+      min: '1',
+      max: '6',
+      step: '1',
+      onChange: (e) => onChange(parseInt(e.target.value)),
+      className: 'range range-sm'
+    }),
+    createElement('div', { className: 'relative flex justify-between'},
+      createElement('span', {}, Icon('zoom_out')),
+      createElement('span', {}, Icon('zoom_in')),
+      createElement('div', { className: 'absolute left-0 right-0 flex justify-between px-2'},
+        createElement('span', { className: 'invisible' }, '|'),
+        createElement('span', {}, '|'),
+        createElement('span', {}, '|'),
+        createElement('span', {}, '|'),
+        createElement('span', {}, '|'),
+        createElement('span', { className: 'invisible' }, '|'),
+      ),
+    ),
+  )
+}
+
 function Button(props, ...children) {
   return createElement('button', {
       className: 'px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-zinc-300 text-white rounded flex items-center gap-2',
@@ -289,18 +314,7 @@ function App({ defaultInput, defaultCustomColors }) {
         ),
         createElement('div', { className: 'mt-auto self-end' },
           ShareButton(),
-          createElement('div', { className: 'mt-4 flex items-center gap-2' },
-            Icon('zoom_in'),
-            createElement('input', {
-              type: 'range',
-              min: '1',
-              max: '6',
-              step: '1',
-              value: zoom,
-              onChange: (e) => setZoom(parseInt(e.target.value)),
-              className: 'w-32'
-            })
-          )
+          Zoom({ onChange: (value) => setZoom(value), })
         ),
       ),
     ),
