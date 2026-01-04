@@ -130,6 +130,7 @@ function App({ defaultInput, defaultCustomColors }) {
   // Initialize Sortable.js for drag-and-drop color swapping
   useEffect(() => {
     if (colorInputsRef.current) {
+      let swapItem
       const instance = Sortable.create(colorInputsRef.current, {
         draggable: '.color-input-item',
         handle: '.drag-handle',
@@ -137,11 +138,22 @@ function App({ defaultInput, defaultCustomColors }) {
         ghostClass: 'opacity-40',
         swap: true,
         swapClass: 'opacity-40',
+        onMove: (evt) => {
+          // Sortable.js wants to swap the draggable elements themselves after
+          // drop which doesn't work with React's DOM reconciliation.
+          // Manually track the drop target so we can cancel the event in the
+          // onMove function.
+          swapItem = evt.related
+          return false
+        },
+        onStart: (evt) => {
+          swapItem = null
+        },
         onEnd: (evt) => {
-          const { item, swapItem } = evt
+          const { item } = evt
           // This event still fires when drag is dropped on itself, but no
           // swap is necessary.
-          if (item === swapItem) return
+          if (!swapItem || (item === swapItem)) return
 
           // Get color keys from the items
           const colorKeyFrom = item.getAttribute('data-color-key')
@@ -170,7 +182,7 @@ function App({ defaultInput, defaultCustomColors }) {
       // Tear down the Sortable instance before creating a new one
       return () => instance.destroy()
     }
-  }, [stitches])
+  }, [colors.join(',')])
 
   // Max row length
   const maxLength = Math.max(...stitches.map((r) => r.length))
