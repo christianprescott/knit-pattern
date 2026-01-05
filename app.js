@@ -55,6 +55,23 @@ function Icon(name) {
   )
 }
 
+function Collapse({ title, ...props }, ...children) {
+  return createElement('details', {
+      name: 'accordion',
+      className: 'join-item collapse border-base-300 border',
+      ...props
+    },
+    createElement('summary', { className: 'collapse-title' },
+      createElement('h2', { className: 'text-3xl' },
+        title
+      ),
+    ),
+    createElement('div', { className: 'collapse-content' },
+      ...children,
+    ),
+  )
+}
+
 function Cell({ colorKey, ...props }) {
   return createElement('div', {
       className: 'min-h-0 overflow-visible aspect-4/3',
@@ -78,7 +95,7 @@ function Zoom({ onChange }) {
       max: '6',
       step: '1',
       onChange: (e) => onChange(parseInt(e.target.value)),
-      className: 'range range-sm range-secondary'
+      className: 'w-full range range-sm range-secondary'
     }),
     createElement('div', { className: 'relative flex justify-between text-secondary'},
       createElement('span', {}, Icon('zoom_out')),
@@ -276,62 +293,73 @@ function App({ defaultInput, defaultCustomColors }) {
     ]
   })
 
-  return createElement('div', {},
-    createElement('div', { className: 'flex' },
-      createElement('div', { className: 'flex-1 p-4' },
-        createElement('h2', { className: 'text-3xl' },
-          Icon('edit'),
-          'Pattern'
-        ),
-        createElement('textarea', {
-          className: 'textarea font-mono w-full min-h-48',
-          defaultValue: defaultInput,
-          onChange: onInputChanged
-        }),
-      ),
-      createElement('div', { className: 'flex-1 p-4 flex flex-col' },
-        createElement('div', { className: 'flex justify-between items-start' },
-          createElement('h2', { className: 'text-3xl' },
-            Icon('palette'),
-            'Colors'
-          ),
-          Button({
-              size: 'sm',
-              color: 'secondary',
-              onClick: () => {
-                deleteUrlParams((k) => k.startsWith('color_'))
-                setCustomColors({})
-              },
-              disabled: Object.keys(customColors).length === 0
-            },
-            Icon('format_color_reset'),
-            'Reset'
-          )
-        ),
-        createElement('div', {
-          ref: colorInputsRef,
-          className: 'grid gap-x-2 gap-y-1',
-          style: { gridTemplateColumns: 'auto 1fr' }
+  return createElement('div', { className: 'flex gap-4 px-4 h-screen' },
+    createElement('div', { className: 'flex-1 overflow-auto flex justify-center items-start' },
+      createElement('div', {
+          className: `transition-[width] w-${zoom}/6 grid gap-0 my-4 p-4 bg-zinc-300 rounded-lg`,
+          style: {
+            ...Object.fromEntries(
+              Object.entries({ ...defaultColors, ...customColors })
+              .map(([k, v]) => [`--color-${k}`, v]),
+            ),
+            gridTemplateColumns: `repeat(${maxLength}, 1fr)`,
+          }
         },
-          colorRows
-        ),
-        createElement('div', { className: 'mt-auto flex flex-col items-end self-end' },
-          ShareButton(),
-          Zoom({ onChange: (value) => setZoom(value) })
-        ),
+        stitchCells
       ),
     ),
-    createElement('div', {
-        className: `transition-[width] w-${zoom}/6 grid gap-0 bg-zinc-300`,
-        style: {
-          ...Object.fromEntries(
-            Object.entries({ ...defaultColors, ...customColors })
-            .map(([k, v]) => [`--color-${k}`, v]),
+
+    createElement('div', { className: 'w-auto overflow-auto min-w-1/4' },
+      createElement('div', { className: 'join join-vertical my-4 w-full' },
+        Collapse({
+            open: Object.keys(defaultCustomColors).length === 0,
+            title: [Icon('edit'), 'Pattern'],
+          },
+          createElement('textarea', {
+            className: 'textarea font-mono w-full min-h-48 ' +
+              // Long text lines scroll instead of wrap
+              'whitespace-pre wrap-normal overflow-x-auto',
+            defaultValue: defaultInput,
+            onChange: onInputChanged
+          }),
+        ),
+
+        Collapse({
+            open: Object.keys(defaultCustomColors).length > 0,
+            title: [Icon('palette'), 'Color'],
+          },
+          createElement('div', { className: 'flex justify-between items-start' },
+            createElement('div', {
+              ref: colorInputsRef,
+              className: 'grid gap-x-2 gap-y-1',
+              style: { gridTemplateColumns: 'auto 1fr' }
+            },
+              colorRows
+            ),
+            Button({
+                size: 'sm',
+                color: 'secondary',
+                onClick: () => {
+                  deleteUrlParams((k) => k.startsWith('color_'))
+                  setCustomColors({})
+                },
+                disabled: Object.keys(customColors).length === 0
+              },
+              Icon('format_color_reset'),
+              'Reset'
+            ),
           ),
-          gridTemplateColumns: `repeat(${maxLength}, 1fr)`,
-        }
-      },
-      stitchCells
+        ),
+
+        Collapse({
+            title: [Icon('tune'), 'Display'],
+          },
+          createElement('div', { className: 'flex flex-col gap-4' },
+            ShareButton(),
+            Zoom({ onChange: (value) => setZoom(value) })
+          ),
+        ),
+      ),
     ),
   )
 }
