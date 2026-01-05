@@ -294,6 +294,9 @@ function App({ defaultInput, defaultCustomColors }) {
   })
 
   return createElement('div', { className: 'flex gap-4 px-4 h-screen' },
+    createElement('div', { className: 'fab' },
+      ShareButton(),
+    ),
     createElement('div', { className: 'flex-1 overflow-auto flex justify-center items-start' },
       createElement('div', {
           className: `transition-[width] w-${zoom}/6 grid gap-0 my-4 p-4 bg-zinc-300 rounded-lg`,
@@ -313,7 +316,7 @@ function App({ defaultInput, defaultCustomColors }) {
       createElement('div', { className: 'join join-vertical my-4 w-full' },
         Collapse({
             open: Object.keys(defaultCustomColors).length === 0,
-            title: [Icon('edit'), 'Pattern'],
+            title: [Icon('edit'), ' ', 'Pattern'],
           },
           createElement('textarea', {
             className: 'textarea font-mono w-full min-h-48 ' +
@@ -326,7 +329,7 @@ function App({ defaultInput, defaultCustomColors }) {
 
         Collapse({
             open: Object.keys(defaultCustomColors).length > 0,
-            title: [Icon('palette'), 'Color'],
+            title: [Icon('palette'), ' ', 'Color'],
           },
           createElement('div', { className: 'flex justify-between items-start' },
             createElement('div', {
@@ -352,10 +355,9 @@ function App({ defaultInput, defaultCustomColors }) {
         ),
 
         Collapse({
-            title: [Icon('tune'), 'Display'],
+            title: [Icon('tune'), ' ', 'Display'],
           },
           createElement('div', { className: 'flex flex-col gap-4' },
-            ShareButton(),
             Zoom({ onChange: (value) => setZoom(value) })
           ),
         ),
