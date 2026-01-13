@@ -96,6 +96,17 @@ function StitchContainer({ cells, className }) {
   }, cells)
 }
 
+function Switch({ onChange }, ...children) {
+  return createElement('label', { className: 'label', },
+    createElement('input', {
+      type: 'checkbox',
+      className: 'toggle toggle-secondary',
+      onChange: (e) => { onChange(e.target.checked) },
+    }),
+    ...children
+  )
+}
+
 function Zoom({ onChange }) {
   return createElement('div', { className: 'w-full' },
     createElement('input', {
@@ -172,6 +183,7 @@ function App({ defaultInput, defaultCustomColors }) {
   const [stitches, setStitches] = useState(parseStitches(defaultInput))
   const [customColors, setCustomColors] = useState(defaultCustomColors)
   const [zoom, setZoom] = useState(6)
+  const [repeat, setRepeat] = useState(false)
   const colorInputsRef = useRef(null)
 
   const onInputChanged = (v) => {
@@ -303,8 +315,6 @@ function App({ defaultInput, defaultCustomColors }) {
     ]
   })
 
-  // TODO: extract to a switch option
-  const repeat = true
   const repetitions = repeat ? Math.ceil(6 / zoom) : 1
 
   return createElement('div', { className: 'flex gap-4 px-4 h-screen' },
@@ -373,6 +383,9 @@ function App({ defaultInput, defaultCustomColors }) {
             title: [Icon('tune'), ' ', 'Display'],
           },
           createElement('div', { className: 'flex flex-col gap-4' },
+            Switch({ onChange: (value) => setRepeat(value) },
+              'Repeat'
+            ),
             Zoom({ onChange: (value) => setZoom(value) })
           ),
         ),
