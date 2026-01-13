@@ -179,35 +179,10 @@ function ShareButton() {
   }
 }
 
-function App({ defaultInput, defaultCustomColors }) {
-  const [stitches, setStitches] = useState(parseStitches(defaultInput))
-  const [customColors, setCustomColors] = useState(defaultCustomColors)
-  const [zoom, setZoom] = useState(6)
-  const [repeat, setRepeat] = useState(false)
+function ColorInputs({ colors, onChange }) {
   const colorInputsRef = useRef(null)
 
-  const onInputChanged = (v) => {
-    const input = v.target.value
-    setStitches(parseStitches(input))
-    encodeGzip(input).then((encoded) => {
-      updateUrlParams({ stitches: encoded })
-    })
-  }
-
-  const onColorChanged = (colorKey, color) => {
-    updateUrlParams({ [`color_${colorKey}`]: color })
-    setCustomColors({
-      ...customColors,
-      [colorKey]: color
-    })
-  }
-
-  // Select default colors
-  const colors = [...new Set(stitches.flat())].sort()
-  const defaultColors = Object.fromEntries(colors.map((colorKey, i) => {
-    const color = Math.floor((i / colors.length) * 128 + 64).toString(16).padStart(2, '0')
-    return [colorKey, `#${color}${color}${color}`]
-  }))
+  const colorKeys = [...new Set(Object.keys(colors))].sort()
 
   // Initialize Sortable.js for drag-and-drop color swapping
   useEffect(() => {
@@ -241,22 +216,13 @@ function App({ defaultInput, defaultCustomColors }) {
           const colorKeyFrom = item.getAttribute('data-color-key')
           const colorKeyTo = swapItem.getAttribute('data-color-key')
 
-          setCustomColors((prev) => {
-            const colorFrom = prev[colorKeyFrom] || defaultColors[colorKeyFrom]
-            const colorTo = prev[colorKeyTo] || defaultColors[colorKeyTo]
+          const colorFrom = colors[colorKeyFrom]
+          const colorTo = colors[colorKeyTo]
 
-            // Update URL params
-            updateUrlParams({
-              [`color_${colorKeyFrom}`]: colorTo,
-              [`color_${colorKeyTo}`]: colorFrom
-            })
-
-            // Swap the colors
-            return {
-              ...prev,
-              [colorKeyFrom]: colorTo,
-              [colorKeyTo]: colorFrom
-            }
+          // Swap the colors
+          onChange({
+            [colorKeyFrom]: colorTo,
+            [colorKeyTo]: colorFrom
           })
         }
       })
@@ -264,7 +230,76 @@ function App({ defaultInput, defaultCustomColors }) {
       // Tear down the Sortable instance before creating a new one
       return () => instance.destroy()
     }
-  }, [colors.join(',')])
+  // Stringify colors to avoid unnecessarily re-initializing Sortable
+  }, [Object.entries(colors).map(e => e.join(':')).join(',')])
+
+  const colorRows = colorKeys.flatMap((colorKey) => {
+    const currentColor = colors[colorKey]
+
+    return [
+      createElement('label', {
+        key: `label-${colorKey}`,
+        for: `color_${colorKey}`,
+        className: 'label flex items-center'
+      }, colorKey),
+      createElement('div', {
+        key: `input-${colorKey}`,
+        className: 'input color-input-item flex items-center w-36 p-1',
+        'data-color-key': colorKey
+      },
+        createElement('input', {
+          id: `color_${colorKey}`,
+          type: 'color',
+          value: currentColor,
+          className: 'rounded-sm border-0',
+          onChange: (e) => onChange({ [colorKey]: e.target.value })
+        }),
+        createElement('div', {
+            className: 'flex items-center drag-handle cursor-grab active:cursor-grabbing select-none text-lg'
+          },
+          Icon('drag_indicator')
+        ),
+      )
+    ]
+  })
+
+  return createElement('div', {
+    ref: colorInputsRef,
+    className: 'grid gap-x-2 gap-y-1',
+    style: { gridTemplateColumns: 'auto 1fr' }
+  },
+    colorRows
+  )
+}
+
+function App({ defaultInput, defaultCustomColors }) {
+  const [stitches, setStitches] = useState(parseStitches(defaultInput))
+  const [customColors, setCustomColors] = useState(defaultCustomColors)
+  const [zoom, setZoom] = useState(6)
+  const [repeat, setRepeat] = useState(false)
+
+  const onInputChanged = (v) => {
+    const input = v.target.value
+    setStitches(parseStitches(input))
+    encodeGzip(input).then((encoded) => {
+      updateUrlParams({ stitches: encoded })
+    })
+  }
+
+  const onColorChanged = (colorKey, color) => {
+    updateUrlParams({ [`color_${colorKey}`]: color })
+    setCustomColors({
+      ...customColors,
+      [colorKey]: color
+    })
+  }
+
+  // Select default colors
+  const colorKeys = [...new Set(stitches.flat())].sort()
+  const defaultColors = Object.fromEntries(colorKeys.map((colorKey, i) => {
+    const color = Math.floor((i / colorKeys.length) * 128 + 64).toString(16).padStart(2, '0')
+    return [colorKey, `#${color}${color}${color}`]
+  }))
 
   // Max row length
   const maxLength = Math.max(...stitches.map((r) => r.length))
@@ -284,36 +319,6 @@ function App({ defaultInput, defaultCustomColors }) {
   for (let j = 0; j < maxLength; j++) {
     stitchCells.push(Cell({ key: 'bottom_' + j, className: 'aspect-4/1' }))
   }
-
-  const colorRows = colors.flatMap((colorKey) => {
-    const currentColor = customColors[colorKey] || defaultColors[colorKey]
-
-    return [
-      createElement('label', {
-        key: `label-${colorKey}`,
-        for: `color_${colorKey}`,
-        className: 'label flex items-center'
-      }, colorKey),
-      createElement('div', {
-        key: `input-${colorKey}`,
-        className: 'input color-input-item flex items-center w-36 p-1',
-        'data-color-key': colorKey
-      },
-        createElement('input', {
-          id: `color_${colorKey}`,
-          type: 'color',
-          value: currentColor,
-          className: 'rounded-sm border-0',
-          onChange: (e) => onColorChanged(colorKey, e.target.value)
-        }),
-        createElement('div', {
-            className: 'flex items-center drag-handle cursor-grab active:cursor-grabbing select-none text-lg'
-          },
-          Icon('drag_indicator')
-        ),
-      )
-    ]
-  })
 
   const repetitions = repeat ? Math.ceil(6 / zoom) : 1
 
@@ -357,13 +362,20 @@ function App({ defaultInput, defaultCustomColors }) {
             title: [Icon('palette'), ' ', 'Color'],
           },
           createElement('div', { className: 'flex justify-between items-start' },
-            createElement('div', {
-              ref: colorInputsRef,
-              className: 'grid gap-x-2 gap-y-1',
-              style: { gridTemplateColumns: 'auto 1fr' }
-            },
-              colorRows
-            ),
+            ColorInputs({
+              colors: { ...defaultColors, ...customColors },
+              onChange: (changes) => {
+                updateUrlParams(
+                  Object.fromEntries(Object.entries(changes).map(
+                    ([k, v]) => [`color_${k}`, v]
+                  ))
+                )
+                setCustomColors({
+                  ...customColors,
+                  ...changes,
+                })
+              },
+            }),
             Button({
                 size: 'sm',
                 color: 'secondary',
