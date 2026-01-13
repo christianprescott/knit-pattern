@@ -87,6 +87,15 @@ function Cell({ colorKey, ...props }) {
   )
 }
 
+function StitchContainer({ cells, className }) {
+  return createElement('div', {
+    className: 'grid gap-0 shrink-0 ' + className,
+    style: {
+      gridTemplateColumns: `repeat(${cells[0].length}, 1fr)`,
+    }
+  }, cells)
+}
+
 function Zoom({ onChange }) {
   return createElement('div', { className: 'w-full' },
     createElement('input', {
@@ -254,13 +263,14 @@ function App({ defaultInput, defaultCustomColors }) {
     })
     // Add additional cells to match length of longest row
     for (let j = cells.length; j < maxLength; j++) {
-      cells.push(Cell({ key: i + '_' + (cells.length + j) }))
+      cells.push(Cell({ key: i + '_' + j }))
     }
     return cells
   })
+
   // Add a row of empty cells as background for the last row's overflow
   for (let j = 0; j < maxLength; j++) {
-    stitchCells.push(Cell({ className: 'aspect-4/1' }))
+    stitchCells.push(Cell({ key: 'bottom_' + j, className: 'aspect-4/1' }))
   }
 
   const colorRows = colors.flatMap((colorKey) => {
@@ -293,22 +303,27 @@ function App({ defaultInput, defaultCustomColors }) {
     ]
   })
 
+  // TODO: extract to a switch option
+  const repeat = true
+  const repetitions = repeat ? Math.ceil(6 / zoom) : 1
+
   return createElement('div', { className: 'flex gap-4 px-4 h-screen' },
     createElement('div', { className: 'fab' },
       ShareButton(),
     ),
     createElement('div', { className: 'flex-1 overflow-auto flex justify-center items-start' },
       createElement('div', {
-          className: `transition-[width] w-${zoom}/6 grid gap-0 my-4 p-4 bg-zinc-300 rounded-lg`,
-          style: {
-            ...Object.fromEntries(
-              Object.entries({ ...defaultColors, ...customColors })
-              .map(([k, v]) => [`--color-${k}`, v]),
-            ),
-            gridTemplateColumns: `repeat(${maxLength}, 1fr)`,
-          }
-        },
-        stitchCells
+        className: (repeat ? 'w-full' : `transition-[width] w-${zoom}/6`) + ' my-4 p-4 overflow-hidden bg-zinc-300 rounded-lg flex',
+        style: {
+          ...Object.fromEntries(
+            Object.entries({ ...defaultColors, ...customColors })
+            .map(([k, v]) => [`--color-${k}`, v]),
+          ),
+        }
+      },
+        Array(repetitions).fill().map(() =>
+          StitchContainer({ cells: stitchCells, className: (repeat ? `transition-[width] w-${zoom}/6` : 'w-full') }),
+        )
       ),
     ),
 
