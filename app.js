@@ -91,9 +91,37 @@ function StitchContainer({ cells, className }) {
   return createElement('div', {
     className: 'grid gap-0 shrink-0 ' + className,
     style: {
-      gridTemplateColumns: `repeat(${cells[0].length}, 1fr)`,
+      gridTemplateColumns: `repeat(${(cells[0] || []).length}, 1fr)`,
     }
   }, cells)
+}
+
+function AutoTextArea({ onChange, className, ...props }) {
+  const textareaRef = useRef(null)
+
+  const setHeight = (textarea) => {
+    // First set height to auto, allowing textarea height to shrink if necessary
+    textarea.style.height = 'auto'
+    textarea.style.height = textarea.scrollHeight + 'px'
+  }
+
+  // Set initial textarea height
+  useEffect(() => {
+    if (textareaRef.current) setHeight(textareaRef.current)
+  }, [props.defaultValue])
+
+  return createElement('textarea', {
+    ref: textareaRef,
+    className: 'textarea font-mono ' +
+      // Long text lines scroll instead of wrap
+      'whitespace-pre wrap-normal overflow-x-auto ' +
+      className,
+    onChange: (e) => {
+      setHeight(e.target)
+      onChange(e.target.value)
+    },
+    ...props
+  })
 }
 
 function Switch({ onChange }, ...children) {
@@ -278,8 +306,7 @@ function App({ defaultInput, defaultCustomColors }) {
   const [zoom, setZoom] = useState(6)
   const [repeat, setRepeat] = useState(false)
 
-  const onInputChanged = (v) => {
-    const input = v.target.value
+  const onInputChanged = (input) => {
     setStitches(parseStitches(input))
     encodeGzip(input).then((encoded) => {
       updateUrlParams({ stitches: encoded })
@@ -348,10 +375,8 @@ function App({ defaultInput, defaultCustomColors }) {
             open: Object.keys(defaultCustomColors).length === 0,
             title: [Icon('edit'), ' ', 'Pattern'],
           },
-          createElement('textarea', {
-            className: 'textarea font-mono w-full min-h-48 ' +
-              // Long text lines scroll instead of wrap
-              'whitespace-pre wrap-normal overflow-x-auto',
+          AutoTextArea({
+            className: 'w-full min-h-48 max-h-96',
             defaultValue: defaultInput,
             onChange: onInputChanged
           }),
