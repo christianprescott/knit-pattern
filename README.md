@@ -2,6 +2,16 @@
 
 A static web app for designing knitting patterns and choosing yarn colors.
 
+### TODO
+
+- [ ] Validate color key input. Sanitize single characters for class name and URL encode. Considering the current `Array.from` approach it may even necessitate a whitelist to avoid handling unexpected graphemes like 🏳️‍🌈.
+- [ ] Determine maximum size of URL param. Warn when input exceeds this size.
+- [ ] Change layout orientation either responsive to window width or fit to pattern aspect ratio.
+- [ ] Header, footer, about, license, terms
+- [ ] Pattern recognition via image upload or camera capture. See branch `image` for a POC uing OpenCV.
+- [ ] Replace native color input with a color picker component. Consider https://iro.js.org/
+- [ ] Render cells as rectangle/dot/other. If only for faster rendering performance.
+
 ## Development
 
 Open index.html in a browser. Make changes to app.js and reload the page.
