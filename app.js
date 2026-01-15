@@ -100,9 +100,10 @@ function AutoTextArea({ onChange, className, ...props }) {
   const textareaRef = useRef(null)
 
   const setHeight = (textarea) => {
-    // First set height to auto, allowing textarea height to shrink if necessary
+    // First set height to auto, allowing textarea height to shrink if necessary...
     textarea.style.height = 'auto'
-    textarea.style.height = textarea.scrollHeight + 'px'
+    // ...then set height to height of content, plus some padding.
+    textarea.style.height = (textarea.scrollHeight + 2) + 'px'
   }
 
   // Set initial textarea height
@@ -376,7 +377,7 @@ function App({ defaultInput, defaultCustomColors }) {
             title: [Icon('edit'), ' ', 'Pattern'],
           },
           AutoTextArea({
-            className: 'w-full min-h-48 max-h-96',
+            className: 'w-full min-h-48',
             defaultValue: defaultInput,
             onChange: onInputChanged
           }),
