@@ -6,7 +6,6 @@ A static web app for designing knitting patterns and choosing yarn colors.
 
 - [ ] Validate color key input. Sanitize single characters for class name and URL encode. Considering the current `Array.from` approach it may even necessitate a whitelist to avoid handling unexpected graphemes like 🏳️‍🌈.
 - [ ] Determine maximum size of URL param. Warn when input exceeds this size.
-- [ ] Help section for instruction on creating and editing patterns
 - [ ] Change layout orientation either responsive to window width or fit to pattern aspect ratio.
 - [ ] Header, footer, about, license, terms
 - [ ] Pattern recognition via image upload or camera capture. See branch `image` for a POC uing OpenCV.

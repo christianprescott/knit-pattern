@@ -207,12 +207,27 @@ function Zoom({ onChange }) {
   )
 }
 
-function Button({ size, color, className, ...props }, ...children) {
+function Button(
+  { size, color, soft, link, ghost, circle, className, ...props },
+  ...children
+) {
+  const classes = Object.entries({
+    circle,
+    soft,
+    link,
+    ghost,
+    size: size || 'md',
+    color,
+  })
+    .map(([attr, value]) =>
+      typeof value === 'string' ? `btn-${value}` : !!value ? `btn-${attr}` : '',
+    )
+    .join(' ')
+
   return createElement(
     'button',
     {
-      className:
-        `btn btn-${size || 'md'} btn-${color || 'neutral'} ` + className,
+      className: `btn ${classes} ${className}`,
       ...props,
     },
     ...children,
@@ -389,11 +404,46 @@ function ColorInputs({ colors, onChange }) {
   )
 }
 
+function Modal({ open, onClose, title }, ...children) {
+  return createElement(
+    'dialog',
+    {
+      className: 'modal',
+      open: open,
+    },
+    createElement(
+      'div',
+      { className: 'modal-box' },
+      createElement(
+        'form',
+        { method: 'dialog' },
+        Button(
+          {
+            ghost: true,
+            circle: true,
+            onClick: onClose,
+            className: 'absolute right-2 top-2',
+          },
+          Icon('close'),
+        ),
+      ),
+      createElement('h3', { className: 'text-lg font-bold' }, title),
+      createElement('div', { className: 'py-4' }, ...children),
+    ),
+    createElement('form', {
+      method: 'dialog',
+      className: 'modal-backdrop',
+      onClick: onClose,
+    }),
+  )
+}
+
 function App({ defaultInput, defaultCustomColors }) {
   const [stitches, setStitches] = useState(parseStitches(defaultInput))
   const [customColors, setCustomColors] = useState(defaultCustomColors)
   const [zoom, setZoom] = useState(6)
   const [repeat, setRepeat] = useState(false)
+  const [showHelpModal, setShowHelpModal] = useState(false)
 
   const onInputChanged = (input) => {
     setStitches(parseStitches(input))
@@ -485,11 +535,23 @@ function App({ defaultInput, defaultCustomColors }) {
             open: Object.keys(defaultCustomColors).length === 0,
             title: [Icon('edit'), ' ', 'Pattern'],
           },
-          AutoTextArea({
-            className: 'w-full min-h-48',
-            defaultValue: defaultInput,
-            onChange: onInputChanged,
-          }),
+          createElement(
+            'div',
+            { className: 'flex flex-col items-end' },
+            AutoTextArea({
+              className: 'w-full min-h-48',
+              defaultValue: defaultInput,
+              onChange: onInputChanged,
+            }),
+            Button(
+              {
+                link: true,
+                color: 'accent',
+                onClick: () => setShowHelpModal(true),
+              },
+              'Help',
+            ),
+          ),
         ),
 
         Collapse(
@@ -540,6 +602,32 @@ function App({ defaultInput, defaultCustomColors }) {
             Switch({ onChange: (value) => setRepeat(value) }, 'Repeat'),
             Zoom({ onChange: (value) => setZoom(value) }),
           ),
+        ),
+      ),
+    ),
+    Modal(
+      {
+        open: showHelpModal,
+        onClose: () => setShowHelpModal(false),
+        title: 'Creating a Pattern',
+      },
+      createElement(
+        'div',
+        { className: 'space-y-4' },
+        createElement(
+          'p',
+          null,
+          'Enter your knitting pattern in the text area above. Each character you type represents a stitch, and each line represents a row. You may separate with spaces or commas for readability but they are not required.',
+        ),
+        createElement(
+          'p',
+          null,
+          'You can type anything you like - letters, numbers, symbols, or even emoji will automatically be assigned unique colors.',
+        ),
+        createElement(
+          'p',
+          null,
+          'Customize colors by clicking on the swatches in the Color section. You can return to edit the pattern at any time.',
         ),
       ),
     ),
