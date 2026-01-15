@@ -19,6 +19,11 @@ Open index.html in a browser. Make changes to app.js and reload the page.
 
 It's not necessary to install dependencies to load the page and run the app.
 
+```sh
+# lint
+docker run --rm -t -v "$(pwd):/app" -w /app node:18 npm run format
+```
+
 ## Test
 
 ```sh

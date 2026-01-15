@@ -8,7 +8,7 @@ encodeGzip = async (input) => {
 
 decodeGzip = async (encoded) => {
   const binary = atob(encoded)
-  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0))
+  const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0))
   const outStream = new Blob([bytes]).stream()
   const stream = outStream.pipeThrough(new DecompressionStream('gzip'))
   return await new Response(stream).text()
@@ -17,7 +17,10 @@ decodeGzip = async (encoded) => {
 decodeOrDefault = async (input) => {
   if (input) {
     return decodeGzip(input).catch(() => {
-      const countByChar = Array.from(input).reduce((acc, c) => (acc[c] = (acc[c] || 0) + 1, acc), {})
+      const countByChar = Array.from(input).reduce(
+        (acc, c) => ((acc[c] = (acc[c] || 0) + 1), acc),
+        {},
+      )
       const totalChars = Object.values(countByChar).reduce((a, b) => a + b, 0)
       const maxFrequency = Math.max(...Object.values(countByChar)) / totalChars
       console.log(maxFrequency)
@@ -31,19 +34,23 @@ decodeOrDefault = async (input) => {
       }
     })
   } else {
-    return "A A A B A A A B\nA A B A A A B A\nA B A A A B A A\nB A A A B A A A\n"
+    return 'A A A B A A A B\nA A B A A A B A\nA B A A A B A A\nB A A A B A A A\n'
   }
 }
 
 parseStitches = (input) => {
   // Parse grid
-  const rows = input.split("\n").map((row) => {
-    return row.split(/[,]/)
-      .map((s) => Array.from(s))
-      .flat()
-      .map((s) => s.trim())
-      .filter((word) => word.length > 0)
-  }).filter((row) => row.length > 0)
+  const rows = input
+    .split('\n')
+    .map((row) => {
+      return row
+        .split(/[,]/)
+        .map((s) => Array.from(s))
+        .flat()
+        .map((s) => s.trim())
+        .filter((word) => word.length > 0)
+    })
+    .filter((row) => row.length > 0)
   return rows
 }
 
@@ -71,50 +78,57 @@ const deleteUrlParams = (func) => {
 const { createElement, useState, useRef, useEffect } = React
 
 function Icon(name) {
-  return createElement('span', { className: 'material-symbols-outlined' },
-    name
-  )
+  return createElement('span', { className: 'material-symbols-outlined' }, name)
 }
 
 function Collapse({ title, ...props }, ...children) {
-  return createElement('details', {
+  return createElement(
+    'details',
+    {
       name: 'accordion',
       className: 'join-item collapse border-base-300 border',
-      ...props
+      ...props,
     },
-    createElement('summary', { className: 'collapse-title' },
-      createElement('h2', { className: 'text-3xl' },
-        title
-      ),
+    createElement(
+      'summary',
+      { className: 'collapse-title' },
+      createElement('h2', { className: 'text-3xl' }, title),
     ),
-    createElement('div', { className: 'collapse-content' },
-      ...children,
-    ),
+    createElement('div', { className: 'collapse-content' }, ...children),
   )
 }
 
 function Cell({ colorKey, ...props }) {
-  return createElement('div', {
+  return createElement(
+    'div',
+    {
       className: 'min-h-0 overflow-visible aspect-4/3',
       ...props,
     },
-    colorKey && createElement('svg', {
-      viewBox: '0 0 24 24',
-      className: 'w-full stroke-1 stroke-zinc-300',
-      style: { fill: `var(--color-${colorKey})` }
-    },
-      createElement('use', { href: '#stitch' })
-    )
+    colorKey &&
+      createElement(
+        'svg',
+        {
+          viewBox: '0 0 24 24',
+          className: 'w-full stroke-1 stroke-zinc-300',
+          style: { fill: `var(--color-${colorKey})` },
+        },
+        createElement('use', { href: '#stitch' }),
+      ),
   )
 }
 
 function StitchContainer({ cells, className }) {
-  return createElement('div', {
-    className: 'grid gap-0 shrink-0 ' + className,
-    style: {
-      gridTemplateColumns: `repeat(${(cells[0] || []).length}, 1fr)`,
-    }
-  }, cells)
+  return createElement(
+    'div',
+    {
+      className: 'grid gap-0 shrink-0 ' + className,
+      style: {
+        gridTemplateColumns: `repeat(${(cells[0] || []).length}, 1fr)`,
+      },
+    },
+    cells,
+  )
 }
 
 function AutoTextArea({ onChange, className, ...props }) {
@@ -124,7 +138,7 @@ function AutoTextArea({ onChange, className, ...props }) {
     // First set height to auto, allowing textarea height to shrink if necessary...
     textarea.style.height = 'auto'
     // ...then set height to height of content, plus some padding.
-    textarea.style.height = (textarea.scrollHeight + 2) + 'px'
+    textarea.style.height = textarea.scrollHeight + 2 + 'px'
   }
 
   // Set initial textarea height
@@ -134,7 +148,8 @@ function AutoTextArea({ onChange, className, ...props }) {
 
   return createElement('textarea', {
     ref: textareaRef,
-    className: 'textarea font-mono ' +
+    className:
+      'textarea font-mono ' +
       // Long text lines scroll instead of wrap
       'whitespace-pre wrap-normal overflow-x-auto ' +
       className,
@@ -142,35 +157,45 @@ function AutoTextArea({ onChange, className, ...props }) {
       setHeight(e.target)
       onChange(e.target.value)
     },
-    ...props
+    ...props,
   })
 }
 
 function Switch({ onChange }, ...children) {
-  return createElement('label', { className: 'label', },
+  return createElement(
+    'label',
+    { className: 'label' },
     createElement('input', {
       type: 'checkbox',
       className: 'toggle toggle-secondary',
-      onChange: (e) => { onChange(e.target.checked) },
+      onChange: (e) => {
+        onChange(e.target.checked)
+      },
     }),
-    ...children
+    ...children,
   )
 }
 
 function Zoom({ onChange }) {
-  return createElement('div', { className: 'w-full' },
+  return createElement(
+    'div',
+    { className: 'w-full' },
     createElement('input', {
       type: 'range',
       min: '1',
       max: '6',
       step: '1',
       onChange: (e) => onChange(parseInt(e.target.value)),
-      className: 'w-full range range-sm range-secondary'
+      className: 'w-full range range-sm range-secondary',
     }),
-    createElement('div', { className: 'relative flex justify-between text-secondary'},
+    createElement(
+      'div',
+      { className: 'relative flex justify-between text-secondary' },
       createElement('span', {}, Icon('zoom_out')),
       createElement('span', {}, Icon('zoom_in')),
-      createElement('div', { className: 'absolute left-0 right-0 flex justify-between px-2'},
+      createElement(
+        'div',
+        { className: 'absolute left-0 right-0 flex justify-between px-2' },
         createElement('span', { className: 'invisible' }, '|'),
         createElement('span', {}, '|'),
         createElement('span', {}, '|'),
@@ -183,11 +208,13 @@ function Zoom({ onChange }) {
 }
 
 function Button({ size, color, ...props }, ...children) {
-  return createElement('button', {
+  return createElement(
+    'button',
+    {
       className: `btn btn-${size || 'md'} btn-${color || 'neutral'}`,
-      ...props
+      ...props,
     },
-    ...children
+    ...children,
   )
 }
 
@@ -197,47 +224,57 @@ function ShareButton() {
   const handleShare = () => {
     const url = window.location.href
 
-    return navigator.share({
-      title: 'Knitpicker Pattern',
-      text: 'Check out this knit pattern!',
-      url: url
-    }).catch(err => {
-      // User cancelled the share or there was an error
-      if (err.name !== 'AbortError') {
-        console.error('Error sharing:', err)
-        return handleCopy(url)
-      }
-    })
+    return navigator
+      .share({
+        title: 'Knitpicker Pattern',
+        text: 'Check out this knit pattern!',
+        url: url,
+      })
+      .catch((err) => {
+        // User cancelled the share or there was an error
+        if (err.name !== 'AbortError') {
+          console.error('Error sharing:', err)
+          return handleCopy(url)
+        }
+      })
   }
 
   const handleCopy = () => {
     const url = window.location.href
-    return navigator.clipboard.writeText(url).then(() => {
-      setShowCopied(true)
-      setTimeout(() => setShowCopied(false), 1600)
-    }).catch(err => {
-      console.error('Failed to copy:', err)
-    })
+    return navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        setShowCopied(true)
+        setTimeout(() => setShowCopied(false), 1600)
+      })
+      .catch((err) => {
+        console.error('Failed to copy:', err)
+      })
   }
 
   // Check if Web Share API is available (mobile devices)
   if (navigator.share) {
-    return Button({ color: 'primary', onClick: handleShare },
+    return Button(
+      { color: 'primary', onClick: handleShare },
       Icon('share'),
-      'Share Pattern'
+      'Share Pattern',
     )
   } else {
-    return createElement('div', { className: 'flex flex-col gap-0' },
+    return createElement(
+      'div',
+      { className: 'flex flex-col gap-0' },
       // Attach the tooltip to a hidden element so we can control its
       // appearance with JS alone
       createElement('span', {
-        className: 'tooltip tooltip-secondary tooltip-top'
-          + (showCopied ? ' tooltip-open' : ''),
-        'data-tip': 'Copied!'
+        className:
+          'tooltip tooltip-secondary tooltip-top' +
+          (showCopied ? ' tooltip-open' : ''),
+        'data-tip': 'Copied!',
       }),
-      Button({ color: 'primary', onClick: handleCopy },
+      Button(
+        { color: 'primary', onClick: handleCopy },
         Icon('link'),
-        'Copy Pattern Link'
+        'Copy Pattern Link',
       ),
     )
   }
@@ -274,7 +311,7 @@ function ColorInputs({ colors, onChange }) {
           const { item } = evt
           // This event still fires when drag is dropped on itself, but no
           // swap is necessary.
-          if (!swapItem || (item === swapItem)) return
+          if (!swapItem || item === swapItem) return
 
           // Get color keys from the items
           const colorKeyFrom = item.getAttribute('data-color-key')
@@ -286,53 +323,68 @@ function ColorInputs({ colors, onChange }) {
           // Swap the colors
           onChange({
             [colorKeyFrom]: colorTo,
-            [colorKeyTo]: colorFrom
+            [colorKeyTo]: colorFrom,
           })
-        }
+        },
       })
 
       // Tear down the Sortable instance before creating a new one
       return () => instance.destroy()
     }
-  // Stringify colors to avoid unnecessarily re-initializing Sortable
-  }, [Object.entries(colors).map(e => e.join(':')).join(',')])
+    // Stringify colors to avoid unnecessarily re-initializing Sortable
+  }, [
+    Object.entries(colors)
+      .map((e) => e.join(':'))
+      .join(','),
+  ])
 
   const colorRows = colorKeys.flatMap((colorKey) => {
     const currentColor = colors[colorKey]
 
     return [
-      createElement('label', {
-        key: `label-${colorKey}`,
-        for: `color_${colorKey}`,
-        className: 'label flex items-center'
-      }, colorKey),
-      createElement('div', {
-        key: `input-${colorKey}`,
-        className: 'input color-input-item flex items-center w-36 p-1',
-        'data-color-key': colorKey
-      },
+      createElement(
+        'label',
+        {
+          key: `label-${colorKey}`,
+          for: `color_${colorKey}`,
+          className: 'label flex items-center',
+        },
+        colorKey,
+      ),
+      createElement(
+        'div',
+        {
+          key: `input-${colorKey}`,
+          className: 'input color-input-item flex items-center w-36 p-1',
+          'data-color-key': colorKey,
+        },
         createElement('input', {
           id: `color_${colorKey}`,
           type: 'color',
           value: currentColor,
           className: 'rounded-sm border-0',
-          onChange: (e) => onChange({ [colorKey]: e.target.value })
+          onChange: (e) => onChange({ [colorKey]: e.target.value }),
         }),
-        createElement('div', {
-            className: 'flex items-center drag-handle cursor-grab active:cursor-grabbing select-none text-lg'
+        createElement(
+          'div',
+          {
+            className:
+              'flex items-center drag-handle cursor-grab active:cursor-grabbing select-none text-lg',
           },
-          Icon('drag_indicator')
+          Icon('drag_indicator'),
         ),
-      )
+      ),
     ]
   })
 
-  return createElement('div', {
-    ref: colorInputsRef,
-    className: 'grid gap-x-2 gap-y-1',
-    style: { gridTemplateColumns: 'auto 1fr' }
-  },
-    colorRows
+  return createElement(
+    'div',
+    {
+      ref: colorInputsRef,
+      className: 'grid gap-x-2 gap-y-1',
+      style: { gridTemplateColumns: 'auto 1fr' },
+    },
+    colorRows,
   )
 }
 
@@ -353,16 +405,20 @@ function App({ defaultInput, defaultCustomColors }) {
     updateUrlParams({ [`color_${colorKey}`]: color })
     setCustomColors({
       ...customColors,
-      [colorKey]: color
+      [colorKey]: color,
     })
   }
 
   // Select default colors
   const colorKeys = [...new Set(stitches.flat())].sort()
-  const defaultColors = Object.fromEntries(colorKeys.map((colorKey, i) => {
-    const color = Math.floor((i / colorKeys.length) * 128 + 64).toString(16).padStart(2, '0')
-    return [colorKey, `#${color}${color}${color}`]
-  }))
+  const defaultColors = Object.fromEntries(
+    colorKeys.map((colorKey, i) => {
+      const color = Math.floor((i / colorKeys.length) * 128 + 64)
+        .toString(16)
+        .padStart(2, '0')
+      return [colorKey, `#${color}${color}${color}`]
+    }),
+  )
 
   // Max row length
   const maxLength = Math.max(...stitches.map((r) => r.length))
@@ -385,51 +441,71 @@ function App({ defaultInput, defaultCustomColors }) {
 
   const repetitions = repeat ? Math.ceil(6 / zoom) : 1
 
-  return createElement('div', { className: 'flex gap-4 px-4 h-screen' },
-    createElement('div', { className: 'fab' },
-      ShareButton(),
-    ),
-    createElement('div', { className: 'flex-1 overflow-auto flex justify-center items-start' },
-      createElement('div', {
-        className: (repeat ? 'w-full' : `transition-[width] w-${zoom}/6`) + ' my-4 p-4 overflow-hidden bg-zinc-300 rounded-lg flex',
-        style: {
-          ...Object.fromEntries(
-            Object.entries({ ...defaultColors, ...customColors })
-            .map(([k, v]) => [`--color-${k}`, v]),
+  return createElement(
+    'div',
+    { className: 'flex gap-4 px-4 h-screen' },
+    createElement('div', { className: 'fab' }, ShareButton()),
+    createElement(
+      'div',
+      { className: 'flex-1 overflow-auto flex justify-center items-start' },
+      createElement(
+        'div',
+        {
+          className:
+            (repeat ? 'w-full' : `transition-[width] w-${zoom}/6`) +
+            ' my-4 p-4 overflow-hidden bg-zinc-300 rounded-lg flex',
+          style: {
+            ...Object.fromEntries(
+              Object.entries({ ...defaultColors, ...customColors }).map(
+                ([k, v]) => [`--color-${k}`, v],
+              ),
+            ),
+          },
+        },
+        Array(repetitions)
+          .fill()
+          .map(() =>
+            StitchContainer({
+              cells: stitchCells,
+              className: repeat ? `transition-[width] w-${zoom}/6` : 'w-full',
+            }),
           ),
-        }
-      },
-        Array(repetitions).fill().map(() =>
-          StitchContainer({ cells: stitchCells, className: (repeat ? `transition-[width] w-${zoom}/6` : 'w-full') }),
-        )
       ),
     ),
 
-    createElement('div', { className: 'w-auto overflow-auto min-w-1/4' },
-      createElement('div', { className: 'join join-vertical my-4 w-full' },
-        Collapse({
+    createElement(
+      'div',
+      { className: 'w-auto overflow-auto min-w-1/4' },
+      createElement(
+        'div',
+        { className: 'join join-vertical my-4 w-full' },
+        Collapse(
+          {
             open: Object.keys(defaultCustomColors).length === 0,
             title: [Icon('edit'), ' ', 'Pattern'],
           },
           AutoTextArea({
             className: 'w-full min-h-48',
             defaultValue: defaultInput,
-            onChange: onInputChanged
+            onChange: onInputChanged,
           }),
         ),
 
-        Collapse({
+        Collapse(
+          {
             open: Object.keys(defaultCustomColors).length > 0,
             title: [Icon('palette'), ' ', 'Color'],
           },
-          createElement('div', { className: 'flex justify-between items-start' },
+          createElement(
+            'div',
+            { className: 'flex justify-between items-start' },
             ColorInputs({
               colors: { ...defaultColors, ...customColors },
               onChange: (changes) => {
                 updateUrlParams(
-                  Object.fromEntries(Object.entries(changes).map(
-                    ([k, v]) => [`color_${k}`, v]
-                  ))
+                  Object.fromEntries(
+                    Object.entries(changes).map(([k, v]) => [`color_${k}`, v]),
+                  ),
                 )
                 setCustomColors({
                   ...customColors,
@@ -437,29 +513,31 @@ function App({ defaultInput, defaultCustomColors }) {
                 })
               },
             }),
-            Button({
+            Button(
+              {
                 size: 'sm',
                 color: 'secondary',
                 onClick: () => {
                   deleteUrlParams((k) => k.startsWith('color_'))
                   setCustomColors({})
                 },
-                disabled: Object.keys(customColors).length === 0
+                disabled: Object.keys(customColors).length === 0,
               },
               Icon('format_color_reset'),
-              'Reset'
+              'Reset',
             ),
           ),
         ),
 
-        Collapse({
+        Collapse(
+          {
             title: [Icon('tune'), ' ', 'Display'],
           },
-          createElement('div', { className: 'flex flex-col gap-4' },
-            Switch({ onChange: (value) => setRepeat(value) },
-              'Repeat'
-            ),
-            Zoom({ onChange: (value) => setZoom(value) })
+          createElement(
+            'div',
+            { className: 'flex flex-col gap-4' },
+            Switch({ onChange: (value) => setRepeat(value) }, 'Repeat'),
+            Zoom({ onChange: (value) => setZoom(value) }),
           ),
         ),
       ),
