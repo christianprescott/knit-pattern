@@ -171,6 +171,8 @@ function Button({ size, color, ...props }, ...children) {
 }
 
 function ShareButton() {
+  const [showCopied, setShowCopied] = useState(false)
+
   const handleShare = () => {
     const url = window.location.href
 
@@ -189,7 +191,10 @@ function ShareButton() {
 
   const handleCopy = () => {
     const url = window.location.href
-    return navigator.clipboard.writeText(url).catch(err => {
+    return navigator.clipboard.writeText(url).then(() => {
+      setShowCopied(true)
+      setTimeout(() => setShowCopied(false), 1600)
+    }).catch(err => {
       console.error('Failed to copy:', err)
     })
   }
@@ -201,9 +206,18 @@ function ShareButton() {
       'Share Pattern'
     )
   } else {
-    return Button({ color: 'primary', onClick: handleCopy },
-      Icon('link'),
-      'Copy Pattern Link'
+    return createElement('div', { className: 'flex flex-col gap-0' },
+      // Attach the tooltip to a hidden element so we can control its
+      // appearance with JS alone
+      createElement('span', {
+        className: 'tooltip tooltip-secondary tooltip-top'
+          + (showCopied ? ' tooltip-open' : ''),
+        'data-tip': 'Copied!'
+      }),
+      Button({ color: 'primary', onClick: handleCopy },
+        Icon('link'),
+        'Copy Pattern Link'
+      ),
     )
   }
 }
