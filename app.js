@@ -207,11 +207,12 @@ function Zoom({ onChange }) {
   )
 }
 
-function Button({ size, color, ...props }, ...children) {
+function Button({ size, color, className, ...props }, ...children) {
   return createElement(
     'button',
     {
-      className: `btn btn-${size || 'md'} btn-${color || 'neutral'}`,
+      className:
+        `btn btn-${size || 'md'} btn-${color || 'neutral'} ` + className,
       ...props,
     },
     ...children,
@@ -272,7 +273,7 @@ function ShareButton() {
         'data-tip': 'Copied!',
       }),
       Button(
-        { color: 'primary', onClick: handleCopy },
+        { color: 'primary', onClick: handleCopy, className: 'shadow-md/30' },
         Icon('link'),
         'Copy Pattern Link',
       ),
