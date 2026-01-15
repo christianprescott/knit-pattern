@@ -14,6 +14,27 @@ decodeGzip = async (encoded) => {
   return await new Response(stream).text()
 }
 
+decodeOrDefault = async (input) => {
+  if (input) {
+    return decodeGzip(input).catch(() => {
+      const countByChar = Array.from(input).reduce((acc, c) => (acc[c] = (acc[c] || 0) + 1, acc), {})
+      const totalChars = Object.values(countByChar).reduce((a, b) => a + b, 0)
+      const maxFrequency = Math.max(...Object.values(countByChar)) / totalChars
+      console.log(maxFrequency)
+
+      if (Object.keys(countByChar).length > 12 && maxFrequency < 0.1) {
+        // The input appears to be a malformed gzip encoding
+        return ''
+      } else {
+        // The input appears to be a literal pattern
+        return input
+      }
+    })
+  } else {
+    return "A A A B A A A B\nA A B A A A B A\nA B A A A B A A\nB A A A B A A A\n"
+  }
+}
+
 parseStitches = (input) => {
   // Parse grid
   const rows = input.split("\n").map((row) => {
