@@ -23,7 +23,6 @@ decodeOrDefault = async (input) => {
       )
       const totalChars = Object.values(countByChar).reduce((a, b) => a + b, 0)
       const maxFrequency = Math.max(...Object.values(countByChar)) / totalChars
-      console.log(maxFrequency)
 
       if (Object.keys(countByChar).length > 12 && maxFrequency < 0.1) {
         // The input appears to be a malformed gzip encoding
@@ -208,11 +207,24 @@ function Zoom({ onChange }) {
 }
 
 function Button(
-  { size, color, soft, link, ghost, circle, className, ...props },
+  {
+    size,
+    color,
+    soft,
+    link,
+    ghost,
+    circle,
+    outline,
+    dash,
+    className,
+    ...props
+  },
   ...children
 ) {
   const classes = Object.entries({
     circle,
+    outline,
+    dash,
     soft,
     link,
     ghost,
@@ -296,7 +308,101 @@ function ShareButton() {
   }
 }
 
-function ColorInputs({ colors, onChange }) {
+function ColorPicker({ defaultColor, onChange, onSubmit, ...props }) {
+  const [stagedColor, setStagedColor] = useState(defaultColor)
+  const [isActive, setIsActive] = useState(false)
+  const pickerRef = useRef(null)
+
+  useEffect(() => {
+    if (pickerRef.current) {
+      const picker = new iro.ColorPicker(pickerRef.current, {
+        width: 144, // .w-48
+        margin: 'var(--spacing)', // .gap-1
+        color: defaultColor,
+        layoutDirection: 'horizontal',
+        layout: [
+          { component: iro.ui.Box },
+          { component: iro.ui.Slider, options: { sliderType: 'hue' } },
+        ],
+      })
+      picker.on('color:change', (color) => {
+        setStagedColor(color.hexString)
+        onChange(color.hexString)
+      })
+    }
+  }, [isActive])
+
+  return createElement(
+    'div',
+    {
+      className: 'color-input-item rounded-lg border border-base-300',
+      ...props,
+    },
+    createElement(
+      'div',
+      {
+        className:
+          'flex gap-1 m-1 transition-[height] ' + (isActive ? 'h-36' : 'h-8'),
+      },
+      createElement(
+        'div',
+        {
+          onClick: () => setIsActive((prev) => !prev),
+          className:
+            'h-full rounded-sm flex flex-col gap-1 ' +
+            (isActive ? 'w-12' : `w-full bg-[${defaultColor}]`),
+        },
+        isActive &&
+          Button(
+            {
+              className: `border-0 rounded-sm w-full flex-2 bg-[${stagedColor}]`,
+              onClick: () => onSubmit(stagedColor),
+            },
+            Icon('check'),
+          ),
+        isActive &&
+          Button(
+            {
+              className: `border-0 rounded-sm w-full flex-1 bg-[${defaultColor}]`,
+              onClick: () => {
+                setStagedColor(defaultColor)
+                onSubmit(defaultColor)
+              },
+            },
+            Icon('close'),
+          ),
+      ),
+      isActive &&
+        createElement(
+          'div',
+          {
+            ref: pickerRef,
+            className: 'h-36',
+          },
+          // Some iro style properties are not configurable. Apply them this way
+          // instead.
+          // Support for inline <style> is not guaranteed but this
+          // will degrade gracefully.
+          createElement(
+            'style',
+            {},
+            '.IroBox, .IroSlider, .IroSliderGradient { border-radius: var(--radius-sm) !important }',
+          ),
+        ),
+      !isActive &&
+        createElement(
+          'div',
+          {
+            className:
+              'flex items-center drag-handle cursor-grab active:cursor-grabbing select-none text-lg',
+          },
+          Icon('drag_indicator'),
+        ),
+    ),
+  )
+}
+
+function ColorInputs({ colors, onChange, onSubmit }) {
   const colorInputsRef = useRef(null)
 
   const colorKeys = [...new Set(Object.keys(colors))].sort()
@@ -337,7 +443,7 @@ function ColorInputs({ colors, onChange }) {
           const colorTo = colors[colorKeyTo]
 
           // Swap the colors
-          onChange({
+          onSubmit({
             [colorKeyFrom]: colorTo,
             [colorKeyTo]: colorFrom,
           })
@@ -362,34 +468,17 @@ function ColorInputs({ colors, onChange }) {
         'label',
         {
           key: `label-${colorKey}`,
-          for: `color_${colorKey}`,
           className: 'label flex items-center',
         },
         colorKey,
       ),
-      createElement(
-        'div',
-        {
-          key: `input-${colorKey}`,
-          className: 'input color-input-item flex items-center w-36 p-1',
-          'data-color-key': colorKey,
-        },
-        createElement('input', {
-          id: `color_${colorKey}`,
-          type: 'color',
-          value: currentColor,
-          className: 'rounded-sm border-0',
-          onChange: (e) => onChange({ [colorKey]: e.target.value }),
-        }),
-        createElement(
-          'div',
-          {
-            className:
-              'flex items-center drag-handle cursor-grab active:cursor-grabbing select-none text-lg',
-          },
-          Icon('drag_indicator'),
-        ),
-      ),
+      createElement(ColorPicker, {
+        key: `input-${colorKey}`,
+        'data-color-key': colorKey,
+        defaultColor: currentColor,
+        onChange: (hex) => onChange({ [colorKey]: hex }),
+        onSubmit: (hex) => onSubmit({ [colorKey]: hex }),
+      }),
     ]
   })
 
@@ -397,7 +486,7 @@ function ColorInputs({ colors, onChange }) {
     'div',
     {
       ref: colorInputsRef,
-      className: 'grid gap-x-2 gap-y-1',
+      className: 'w-full grid gap-x-2 gap-y-1',
       style: { gridTemplateColumns: 'auto 1fr' },
     },
     colorRows,
@@ -441,6 +530,7 @@ function Modal({ open, onClose, title }, ...children) {
 function App({ defaultInput, defaultCustomColors }) {
   const [stitches, setStitches] = useState(parseStitches(defaultInput))
   const [customColors, setCustomColors] = useState(defaultCustomColors)
+  const [stagedColors, setStagedColors] = useState({})
   const [zoom, setZoom] = useState(6)
   const [repeat, setRepeat] = useState(false)
   const [showHelpModal, setShowHelpModal] = useState(false)
@@ -449,14 +539,6 @@ function App({ defaultInput, defaultCustomColors }) {
     setStitches(parseStitches(input))
     encodeGzip(input).then((encoded) => {
       updateUrlParams({ stitches: encoded })
-    })
-  }
-
-  const onColorChanged = (colorKey, color) => {
-    updateUrlParams({ [`color_${colorKey}`]: color })
-    setCustomColors({
-      ...customColors,
-      [colorKey]: color,
     })
   }
 
@@ -495,7 +577,7 @@ function App({ defaultInput, defaultCustomColors }) {
   return createElement(
     'div',
     { className: 'flex gap-4 px-4 h-screen' },
-    createElement('div', { className: 'fab' }, ShareButton()),
+    createElement('div', { className: 'fab' }, createElement(ShareButton)),
     createElement(
       'div',
       { className: 'flex-1 overflow-auto flex justify-center items-start' },
@@ -507,9 +589,11 @@ function App({ defaultInput, defaultCustomColors }) {
             ' my-4 p-4 overflow-hidden bg-zinc-300 rounded-lg flex',
           style: {
             ...Object.fromEntries(
-              Object.entries({ ...defaultColors, ...customColors }).map(
-                ([k, v]) => [`--color-${k}`, v],
-              ),
+              Object.entries({
+                ...defaultColors,
+                ...customColors,
+                ...stagedColors,
+              }).map(([k, v]) => [`--color-${k}`, v]),
             ),
           },
         },
@@ -538,7 +622,7 @@ function App({ defaultInput, defaultCustomColors }) {
           createElement(
             'div',
             { className: 'flex flex-col items-end' },
-            AutoTextArea({
+            createElement(AutoTextArea, {
               className: 'w-full min-h-48',
               defaultValue: defaultInput,
               onChange: onInputChanged,
@@ -561,15 +645,17 @@ function App({ defaultInput, defaultCustomColors }) {
           },
           createElement(
             'div',
-            { className: 'flex justify-between items-start' },
-            ColorInputs({
+            { className: 'flex flex-col items-end gap-1' },
+            createElement(ColorInputs, {
               colors: { ...defaultColors, ...customColors },
-              onChange: (changes) => {
+              onChange: (changes) => setStagedColors(changes),
+              onSubmit: (changes) => {
                 updateUrlParams(
                   Object.fromEntries(
                     Object.entries(changes).map(([k, v]) => [`color_${k}`, v]),
                   ),
                 )
+                setStagedColors({})
                 setCustomColors({
                   ...customColors,
                   ...changes,

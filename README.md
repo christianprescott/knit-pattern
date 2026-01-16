@@ -8,7 +8,6 @@ A static web app for designing knitting patterns and choosing yarn colors.
 - [ ] Change layout orientation either responsive to window width or fit to pattern aspect ratio.
 - [ ] Header, footer, about page with attributions, privacy policy page
 - [ ] Pattern recognition via image upload or camera capture. See branch `image` for a POC uing OpenCV.
-- [ ] Replace native color input with a color picker component. Consider https://iro.js.org/
 - [ ] Render cells as rectangle/dot/other. If only for faster rendering performance.
 
 ## Development
