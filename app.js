@@ -577,10 +577,10 @@ function App({ defaultInput, defaultCustomColors }) {
   return createElement(
     'div',
     { className: 'flex gap-4 px-4 h-screen' },
-    createElement('div', { className: 'fab' }, createElement(ShareButton)),
     createElement(
       'div',
       { className: 'flex-1 overflow-auto flex justify-center items-start' },
+      createElement('div', { className: 'fab' }, createElement(ShareButton)),
       createElement(
         'div',
         {
