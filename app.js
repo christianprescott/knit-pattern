@@ -579,32 +579,40 @@ function App({ defaultInput, defaultCustomColors }) {
     { className: 'flex gap-4 px-4 h-screen' },
     createElement(
       'div',
-      { className: 'relative flex-1 overflow-auto flex justify-center items-start' },
-      createElement('div', { className: 'fab' }, createElement(ShareButton)),
+      { className: 'relative flex-1 h-full' },
       createElement(
         'div',
-        {
-          className:
-            (repeat ? 'w-full' : `transition-[width] w-${zoom}/6`) +
-            ' my-4 p-4 overflow-hidden bg-zinc-300 rounded-lg flex',
-          style: {
-            ...Object.fromEntries(
-              Object.entries({
-                ...defaultColors,
-                ...customColors,
-                ...stagedColors,
-              }).map(([k, v]) => [`--color-${k}`, v]),
-            ),
+        { className: 'overflow-auto h-full flex justify-center items-start' },
+        createElement(
+          'div',
+          {
+            className:
+              (repeat ? 'w-full' : `transition-[width] w-${zoom}/6`) +
+              ' my-4 p-4 overflow-hidden bg-zinc-300 rounded-lg flex',
+            style: {
+              ...Object.fromEntries(
+                Object.entries({
+                  ...defaultColors,
+                  ...customColors,
+                  ...stagedColors,
+                }).map(([k, v]) => [`--color-${k}`, v]),
+              ),
+            },
           },
-        },
-        Array(repetitions)
-          .fill()
-          .map(() =>
-            StitchContainer({
-              cells: stitchCells,
-              className: repeat ? `transition-[width] w-${zoom}/6` : 'w-full',
-            }),
-          ),
+          Array(repetitions)
+            .fill()
+            .map(() =>
+              StitchContainer({
+                cells: stitchCells,
+                className: repeat ? `transition-[width] w-${zoom}/6` : 'w-full',
+              }),
+            ),
+        ),
+      ),
+      createElement(
+        'div',
+        { className: 'absolute bottom-4 right-4' },
+        createElement(ShareButton),
       ),
     ),
 
