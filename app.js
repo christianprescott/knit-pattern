@@ -105,15 +105,20 @@ function Cell({ colorKey, ...props }) {
       ...props,
     },
     colorKey &&
-      createElement(
-        'svg',
-        {
-          viewBox: '0 0 24 24',
-          className: 'w-full stroke-1 stroke-zinc-300',
-          style: { fill: `var(--color-${colorKey})` },
-        },
-        createElement('use', { href: '#stitch' }),
-      ),
+      createElement('div', {
+        className: 'h-full w-full border-1 border-zinc-300',
+        style: { backgroundColor: `var(--color-${colorKey})` },
+      }),
+    // TODO: reinstate stitch shapes. They were disabled for performance reasons.
+    // createElement(
+    //   'svg',
+    //   {
+    //     viewBox: '0 0 24 24',
+    //     className: 'w-full stroke-1 stroke-zinc-300',
+    //     style: { fill: `var(--color-${colorKey})` },
+    //   },
+    //   createElement('use', { href: '#stitch' }),
+    // ),
   )
 }
 
