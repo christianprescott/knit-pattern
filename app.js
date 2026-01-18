@@ -661,14 +661,20 @@ function App({ defaultInput, defaultCustomColors }) {
             { className: 'flex flex-col items-end gap-1' },
             createElement(ColorInputs, {
               colors: { ...defaultColors, ...customColors },
-              onChange: (changes) => setStagedColors(changes),
+              onChange: (changes) =>
+                setStagedColors((prev) => ({ ...prev, ...changes })),
               onSubmit: (changes) => {
                 updateUrlParams(
                   Object.fromEntries(
                     Object.entries(changes).map(([k, v]) => [`color_${k}`, v]),
                   ),
                 )
-                setStagedColors({})
+                setStagedColors((prev) => {
+                  Object.keys(changes).forEach((k) => {
+                    delete prev[k]
+                  })
+                  return prev
+                })
                 setCustomColors({
                   ...customColors,
                   ...changes,
