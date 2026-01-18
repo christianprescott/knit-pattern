@@ -122,17 +122,56 @@ function Cell({ colorKey, ...props }) {
   )
 }
 
-function StitchContainer({ cells, className }) {
-  return createElement(
-    'div',
-    {
-      className: 'grid gap-0 shrink-0 ' + className,
-      style: {
-        gridTemplateColumns: `repeat(${(cells[0] || []).length}, 1fr)`,
-      },
+function StitchContainer({ stitches, colors, ...props }) {
+  const canvasRef = useRef(null)
+
+  useEffect(
+    () => {
+      const canvas = canvasRef.current
+      if (!canvas || !stitches.length) return
+
+      const rows = stitches.length
+      const cols = Math.max(...stitches.map((r) => r.length))
+      // Scale up the canvas rendering so it is oversampled for scaling.
+      const scale = 2
+      const cellWidth = 24 * scale
+      const cellHeight = 18 * scale
+
+      // Set canvas size
+      canvas.width = cols * cellWidth
+      canvas.height = rows * cellHeight
+
+      // Clear canvas
+      const ctx = canvas.getContext('2d')
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      // Draw cells
+      stitches.forEach((row, i) => {
+        row.forEach((colorKey, j) => {
+          if (colorKey) {
+            // Fill
+            ctx.fillStyle = colors[colorKey]
+            ctx.fillRect(j * cellWidth, i * cellHeight, cellWidth, cellHeight)
+
+            // Border
+            ctx.strokeStyle =
+              getComputedStyle(canvas).getPropertyValue('--color-zinc-300') ||
+              'oklch(87.1% 0.006 286.286)'
+            ctx.lineWidth = 1 * scale
+            ctx.strokeRect(j * cellWidth, i * cellHeight, cellWidth, cellHeight)
+          }
+        })
+      })
     },
-    cells,
+    // This rerenders more than necessary because of the shallow comparison.
+    // Should be okay for now.
+    [stitches, colors],
   )
+
+  return createElement('canvas', {
+    ref: canvasRef,
+    ...props,
+  })
 }
 
 function AutoTextArea({ onChange, className, ...props }) {
@@ -558,25 +597,6 @@ function App({ defaultInput, defaultCustomColors }) {
     }),
   )
 
-  // Max row length
-  const maxLength = Math.max(...stitches.map((r) => r.length))
-
-  const stitchCells = stitches.map((row, i) => {
-    const cells = row.map((column, j) => {
-      return Cell({ key: i + '_' + j, colorKey: column })
-    })
-    // Add additional cells to match length of longest row
-    for (let j = cells.length; j < maxLength; j++) {
-      cells.push(Cell({ key: i + '_' + j }))
-    }
-    return cells
-  })
-
-  // Add a row of empty cells as background for the last row's overflow
-  for (let j = 0; j < maxLength; j++) {
-    stitchCells.push(Cell({ key: 'bottom_' + j, className: 'aspect-4/1' }))
-  }
-
   const repetitions = repeat ? Math.ceil(6 / zoom) : 1
 
   return createElement(
@@ -592,24 +612,21 @@ function App({ defaultInput, defaultCustomColors }) {
           'div',
           {
             className:
-              (repeat ? 'w-full' : `transition-[width] w-${zoom}/6`) +
-              ' my-4 p-4 overflow-hidden bg-zinc-300 rounded-lg flex',
-            style: {
-              ...Object.fromEntries(
-                Object.entries({
-                  ...defaultColors,
-                  ...customColors,
-                  ...stagedColors,
-                }).map(([k, v]) => [`--color-${k}`, v]),
-              ),
-            },
+              'my-4 p-4 overflow-hidden bg-zinc-300 rounded-lg flex ' +
+              // Always render the 1/6 class to trigger Tailwind's JIT
+              // compilation and preload the classes so animation works.
+              (repeat ? 'w-full' : `transition-[width] w-1/6 w-${zoom}/6`),
           },
           Array(repetitions)
             .fill()
-            .map(() =>
-              StitchContainer({
-                cells: stitchCells,
-                className: repeat ? `transition-[width] w-${zoom}/6` : 'w-full',
+            .map((_, i) =>
+              createElement(StitchContainer, {
+                key: i,
+                stitches,
+                colors: { ...defaultColors, ...customColors, ...stagedColors },
+                className: repeat
+                  ? `shrink-0 transition-[width] w-1/6 w-${zoom}/6`
+                  : 'w-full',
               }),
             ),
         ),
