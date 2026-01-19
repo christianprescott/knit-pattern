@@ -125,6 +125,9 @@ function Cell({ colorKey, ...props }) {
 function StitchContainer({ stitches, colors, onClick, ...props }) {
   const canvasRef = useRef(null)
 
+  const rows = stitches.length
+  const cols = Math.max(...stitches.map((r) => r.length))
+
   const handleClick = (e) => {
     const canvas = canvasRef.current
     const rect = canvas.getBoundingClientRect()
@@ -132,13 +135,11 @@ function StitchContainer({ stitches, colors, onClick, ...props }) {
     const x = (e.clientX - rect.left) / rect.width
     const y = (e.clientY - rect.top) / rect.height
 
-    const row = Math.floor(y * stitches.length)
-    const col = Math.floor(x * stitches[row].length)
+    const row = Math.floor(y * rows)
+    const col = Math.floor(x * cols)
 
     const colorKey = stitches[row]?.[col]
-    if (colorKey) {
-      onClick(colorKey)
-    }
+    if (colorKey) onClick(colorKey)
   }
 
   useEffect(
@@ -146,8 +147,6 @@ function StitchContainer({ stitches, colors, onClick, ...props }) {
       const canvas = canvasRef.current
       if (!canvas || !stitches.length) return
 
-      const rows = stitches.length
-      const cols = Math.max(...stitches.map((r) => r.length))
       // Scale up the canvas rendering so it is oversampled for scaling.
       const scale = 2
       const cellWidth = 24 * scale
