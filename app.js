@@ -122,8 +122,24 @@ function Cell({ colorKey, ...props }) {
   )
 }
 
-function StitchContainer({ stitches, colors, ...props }) {
+function StitchContainer({ stitches, colors, onClick, ...props }) {
   const canvasRef = useRef(null)
+
+  const handleClick = (e) => {
+    const canvas = canvasRef.current
+    const rect = canvas.getBoundingClientRect()
+    // Get click position as ratio of canvas rendered dimensions
+    const x = (e.clientX - rect.left) / rect.width
+    const y = (e.clientY - rect.top) / rect.height
+
+    const row = Math.floor(y * stitches.length)
+    const col = Math.floor(x * stitches[row].length)
+
+    const colorKey = stitches[row]?.[col]
+    if (colorKey) {
+      onClick(colorKey)
+    }
+  }
 
   useEffect(
     () => {
@@ -155,8 +171,10 @@ function StitchContainer({ stitches, colors, ...props }) {
               // Offset each cell to simulate a transparent border. Adding
               // full integer width places cells are off center, but this way
               // avoids soft render due to "split" pixels.
-              j * cellWidth + borderWidth, i * cellHeight + borderWidth,
-              cellWidth - borderWidth, cellHeight - borderWidth
+              j * cellWidth + borderWidth,
+              i * cellHeight + borderWidth,
+              cellWidth - borderWidth,
+              cellHeight - borderWidth,
             )
           }
         })
@@ -169,6 +187,7 @@ function StitchContainer({ stitches, colors, ...props }) {
 
   return createElement('canvas', {
     ref: canvasRef,
+    onClick: handleClick,
     ...props,
   })
 }
@@ -351,10 +370,15 @@ function ShareButton() {
   }
 }
 
-function ColorPicker({ defaultColor, onChange, onSubmit, ...props }) {
-  const [stagedColor, setStagedColor] = useState(defaultColor)
-  const [isActive, setIsActive] = useState(false)
+function ColorPicker({
+  defaultColor,
+  stagedColor,
+  onChange,
+  onSubmit,
+  ...props
+}) {
   const pickerRef = useRef(null)
+  const isActive = !!stagedColor
 
   useEffect(() => {
     if (pickerRef.current) {
@@ -369,7 +393,6 @@ function ColorPicker({ defaultColor, onChange, onSubmit, ...props }) {
         ],
       })
       picker.on('color:change', (color) => {
-        setStagedColor(color.hexString)
         onChange(color.hexString)
       })
     }
@@ -390,7 +413,7 @@ function ColorPicker({ defaultColor, onChange, onSubmit, ...props }) {
       createElement(
         'div',
         {
-          onClick: () => setIsActive((prev) => !prev),
+          onClick: isActive ? null : () => onChange(defaultColor),
           className:
             'h-full rounded-sm flex flex-col gap-1 ' +
             (isActive ? 'w-12' : `w-full bg-[${defaultColor}]`),
@@ -407,10 +430,7 @@ function ColorPicker({ defaultColor, onChange, onSubmit, ...props }) {
           Button(
             {
               className: `border-0 rounded-sm w-full flex-1 bg-[${defaultColor}]`,
-              onClick: () => {
-                setStagedColor(defaultColor)
-                onSubmit(defaultColor)
-              },
+              onClick: () => onSubmit(defaultColor),
             },
             Icon('close'),
           ),
@@ -445,7 +465,7 @@ function ColorPicker({ defaultColor, onChange, onSubmit, ...props }) {
   )
 }
 
-function ColorInputs({ colors, onChange, onSubmit }) {
+function ColorInputs({ colors, stagedColors, onChange, onSubmit }) {
   const colorInputsRef = useRef(null)
 
   const colorKeys = [...new Set(Object.keys(colors))].sort()
@@ -519,6 +539,7 @@ function ColorInputs({ colors, onChange, onSubmit }) {
         key: `input-${colorKey}`,
         'data-color-key': colorKey,
         defaultColor: currentColor,
+        stagedColor: stagedColors[colorKey],
         onChange: (hex) => onChange({ [colorKey]: hex }),
         onSubmit: (hex) => onSubmit({ [colorKey]: hex }),
       }),
@@ -595,6 +616,7 @@ function App({ defaultInput, defaultCustomColors }) {
       return [colorKey, `#${color}${color}${color}`]
     }),
   )
+  const colors = { ...defaultColors, ...customColors, ...stagedColors }
 
   const repetitions = repeat ? Math.ceil(6 / zoom) : 1
 
@@ -622,10 +644,16 @@ function App({ defaultInput, defaultCustomColors }) {
               createElement(StitchContainer, {
                 key: i,
                 stitches,
-                colors: { ...defaultColors, ...customColors, ...stagedColors },
+                colors,
                 className: repeat
                   ? `shrink-0 transition-[width] w-1/6 w-${zoom}/6`
                   : 'w-full',
+                onClick: (colorKey) => {
+                  setStagedColors((prev) => ({
+                    ...prev,
+                    [colorKey]: colors[colorKey],
+                  }))
+                },
               }),
             ),
         ),
@@ -677,6 +705,7 @@ function App({ defaultInput, defaultCustomColors }) {
             { className: 'flex flex-col items-end gap-1' },
             createElement(ColorInputs, {
               colors: { ...defaultColors, ...customColors },
+              stagedColors,
               onChange: (changes) =>
                 setStagedColors((prev) => ({ ...prev, ...changes })),
               onSubmit: (changes) => {
@@ -704,6 +733,7 @@ function App({ defaultInput, defaultCustomColors }) {
                 onClick: () => {
                   deleteUrlParams((k) => k.startsWith('color_'))
                   setCustomColors({})
+                  setStagedColors({})
                 },
                 disabled: Object.keys(customColors).length === 0,
               },
