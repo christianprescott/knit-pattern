@@ -412,19 +412,19 @@ function ColorPicker({
       createElement(
         'div',
         {
-          onClick: isActive ? null : () => onChange(defaultColor),
           className:
             'h-full rounded-sm flex flex-col gap-1 ' +
-            (isActive ? 'w-12' : `w-full bg-[${defaultColor}]`),
+            (isActive ? 'w-12' : `w-full`),
         },
-        isActive &&
-          Button(
-            {
-              className: `border-0 rounded-sm w-full flex-2 bg-[${stagedColor}]`,
-              onClick: () => onSubmit(stagedColor),
-            },
-            Icon('check'),
-          ),
+        Button(
+          {
+            className: `border-0 rounded-sm w-full flex-2 bg-[${stagedColor || defaultColor}]`,
+            onClick: isActive
+              ? () => onSubmit(stagedColor)
+              : () => onChange(defaultColor),
+          },
+          isActive && Icon('check'),
+        ),
         isActive &&
           Button(
             {
@@ -534,7 +534,7 @@ function ColorInputs({
 
     return [
       createElement(
-        'label',
+        'button',
         {
           key: `label-${colorKey}`,
           className:
@@ -542,6 +542,8 @@ function ColorInputs({
             (animatingColorKey === colorKey ? 'animate-boing' : ''),
           onAnimationEnd:
             animatingColorKey === colorKey ? onAnimationEnd : undefined,
+          onClick: () =>
+            onChange({ [colorKey]: stagedColors[colorKey] || currentColor }),
         },
         colorKey,
       ),
