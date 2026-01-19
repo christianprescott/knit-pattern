@@ -27,6 +27,31 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=check,close,content_copy,drag_indicator,edit,format_color_reset,link,palette,share,tune,zoom_in,zoom_out"
     />
+    <style>
+      @keyframes boing {
+        15%,
+        40%,
+        75%,
+        100% {
+          transform-origin: center center;
+        }
+        15% {
+          transform: scale(1.4, 1.2) translateX(-6px);
+        }
+        40% {
+          transform: scale(0.6, 0.8) translateX(4px);
+        }
+        75% {
+          transform: scale(1.2, 1.1) translateX(-2px);
+        }
+        100% {
+          transform: scale(1, 1);
+        }
+      }
+      .animate-boing {
+        animation: boing 400ms ease-in-out;
+      }
+    </style>
   </head>
 
   <body>

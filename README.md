@@ -4,7 +4,6 @@ A static web app for designing knitting patterns and choosing yarn colors.
 
 ### TODO
 
-- [ ] Click cell to activate color picker
 - [ ] Validate color key input. Sanitize single characters for class name and URL encode. Considering the current `Array.from` approach it may even necessitate a whitelist to avoid handling unexpected graphemes like 🏳️‍🌈.
 - [ ] Change layout orientation either responsive to window width or fit to pattern aspect ratio.
 - [ ] Header, footer, about page with attributions, privacy policy page

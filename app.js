@@ -465,7 +465,14 @@ function ColorPicker({
   )
 }
 
-function ColorInputs({ colors, stagedColors, onChange, onSubmit }) {
+function ColorInputs({
+  colors,
+  stagedColors,
+  animatingColorKey,
+  onAnimationEnd,
+  onChange,
+  onSubmit,
+}) {
   const colorInputsRef = useRef(null)
 
   const colorKeys = [...new Set(Object.keys(colors))].sort()
@@ -531,7 +538,11 @@ function ColorInputs({ colors, stagedColors, onChange, onSubmit }) {
         'label',
         {
           key: `label-${colorKey}`,
-          className: 'label flex items-center',
+          className:
+            'label flex items-center ' +
+            (animatingColorKey === colorKey ? 'animate-boing' : ''),
+          onAnimationEnd:
+            animatingColorKey === colorKey ? onAnimationEnd : undefined,
         },
         colorKey,
       ),
@@ -595,6 +606,7 @@ function App({ defaultInput, defaultCustomColors }) {
   const [stitches, setStitches] = useState(parseStitches(defaultInput))
   const [customColors, setCustomColors] = useState(defaultCustomColors)
   const [stagedColors, setStagedColors] = useState({})
+  const [animatingColorKey, setAnimatingColorKey] = useState(null)
   const [zoom, setZoom] = useState(6)
   const [repeat, setRepeat] = useState(false)
   const [showHelpModal, setShowHelpModal] = useState(false)
@@ -653,6 +665,7 @@ function App({ defaultInput, defaultCustomColors }) {
                     ...prev,
                     [colorKey]: colors[colorKey],
                   }))
+                  setAnimatingColorKey(colorKey)
                 },
               }),
             ),
@@ -706,6 +719,8 @@ function App({ defaultInput, defaultCustomColors }) {
             createElement(ColorInputs, {
               colors: { ...defaultColors, ...customColors },
               stagedColors,
+              animatingColorKey,
+              onAnimationEnd: () => setAnimatingColorKey(null),
               onChange: (changes) =>
                 setStagedColors((prev) => ({ ...prev, ...changes })),
               onSubmit: (changes) => {
