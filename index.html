@@ -29,27 +29,21 @@
     />
     <style>
       @keyframes boing {
-        15%,
-        40%,
-        75%,
-        100% {
-          transform-origin: center center;
-        }
         15% {
           transform: scale(1.4, 1.2) translateX(-6px);
         }
         40% {
-          transform: scale(0.6, 0.8) translateX(4px);
+          transform: scale(0.8, 1.2) translateX(6px);
         }
         75% {
-          transform: scale(1.2, 1.1) translateX(-2px);
+          transform: scale(1.2, 0.9) translateX(-4px);
         }
         100% {
           transform: scale(1, 1);
         }
       }
       .animate-boing {
-        animation: boing 400ms ease-in-out;
+        animation: boing 400ms ease-out;
       }
     </style>
   </head>
