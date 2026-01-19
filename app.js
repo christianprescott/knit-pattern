@@ -619,14 +619,40 @@ function App({ defaultInput, defaultCustomColors }) {
     })
   }
 
+  const resetColors = () => {
+    deleteUrlParams((k) => k.startsWith('color_'))
+    setCustomColors({})
+    setStagedColors({})
+  }
+
+  const updateColors = (changes) => {
+    updateUrlParams(
+      Object.fromEntries(
+        Object.entries(changes).map(([k, v]) => [`color_${k}`, v]),
+      ),
+    )
+    setStagedColors((prev) => {
+      Object.keys(changes).forEach((k) => {
+        delete prev[k]
+      })
+      return prev
+    })
+    setCustomColors({
+      ...customColors,
+      ...changes,
+    })
+  }
+
   // Select default colors
   const colorKeys = [...new Set(stitches.flat())].sort()
   const defaultColors = Object.fromEntries(
     colorKeys.map((colorKey, i) => {
-      const color = Math.floor((i / colorKeys.length) * 128 + 64)
+      const lightness = Math.floor((128 * i) / (colorKeys.length - 1))
+      const rb = lightness.toString(16).padStart(2, '0')
+      const g = Math.round(64 + lightness)
         .toString(16)
         .padStart(2, '0')
-      return [colorKey, `#${color}${color}${color}`]
+      return [colorKey, `#${rb}${g}${rb}`]
     }),
   )
   const colors = { ...defaultColors, ...customColors, ...stagedColors }
@@ -724,33 +750,13 @@ function App({ defaultInput, defaultCustomColors }) {
               onAnimationEnd: () => setAnimatingColorKey(null),
               onChange: (changes) =>
                 setStagedColors((prev) => ({ ...prev, ...changes })),
-              onSubmit: (changes) => {
-                updateUrlParams(
-                  Object.fromEntries(
-                    Object.entries(changes).map(([k, v]) => [`color_${k}`, v]),
-                  ),
-                )
-                setStagedColors((prev) => {
-                  Object.keys(changes).forEach((k) => {
-                    delete prev[k]
-                  })
-                  return prev
-                })
-                setCustomColors({
-                  ...customColors,
-                  ...changes,
-                })
-              },
+              onSubmit: updateColors,
             }),
             Button(
               {
                 size: 'sm',
                 color: 'secondary',
-                onClick: () => {
-                  deleteUrlParams((k) => k.startsWith('color_'))
-                  setCustomColors({})
-                  setStagedColors({})
-                },
+                onClick: resetColors,
                 disabled: Object.keys(customColors).length === 0,
               },
               Icon('format_color_reset'),
