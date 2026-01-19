@@ -136,6 +136,7 @@ function StitchContainer({ stitches, colors, ...props }) {
       const scale = 2
       const cellWidth = 24 * scale
       const cellHeight = 18 * scale
+      const borderWidth = 1 * scale
 
       // Set canvas size
       canvas.width = cols * cellWidth
@@ -149,16 +150,14 @@ function StitchContainer({ stitches, colors, ...props }) {
       stitches.forEach((row, i) => {
         row.forEach((colorKey, j) => {
           if (colorKey) {
-            // Fill
             ctx.fillStyle = colors[colorKey]
-            ctx.fillRect(j * cellWidth, i * cellHeight, cellWidth, cellHeight)
-
-            // Border
-            ctx.strokeStyle =
-              getComputedStyle(canvas).getPropertyValue('--color-zinc-300') ||
-              'oklch(87.1% 0.006 286.286)'
-            ctx.lineWidth = 1 * scale
-            ctx.strokeRect(j * cellWidth, i * cellHeight, cellWidth, cellHeight)
+            ctx.fillRect(
+              // Offset each cell to simulate a transparent border. Adding
+              // full integer width places cells are off center, but this way
+              // avoids soft render due to "split" pixels.
+              j * cellWidth + borderWidth, i * cellHeight + borderWidth,
+              cellWidth - borderWidth, cellHeight - borderWidth
+            )
           }
         })
       })
