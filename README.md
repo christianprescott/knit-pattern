@@ -4,11 +4,12 @@ A static web app for designing knitting patterns and choosing yarn colors.
 
 ### TODO
 
+- [ ] Repeat/zoom canvas gets stretched on webkit
 - [ ] Validate color key input. Sanitize single characters for class name and URL encode. Considering the current `Array.from` approach it may even necessitate a whitelist to avoid handling unexpected graphemes like 🏳️‍🌈.
 - [ ] Change layout orientation either responsive to window width or fit to pattern aspect ratio.
 - [ ] Header, footer, about page with attributions, privacy policy page
 - [ ] Pattern recognition via image upload or camera capture. See branch `image` for a POC uing OpenCV.
-- [ ] Render cells as rectangle/dot/other. If only for faster rendering performance.
+- [ ] Render cells as rectangle/dot/stitch/other. If only for faster rendering performance.
 
 ## Development
 
