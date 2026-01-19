@@ -684,9 +684,9 @@ function App({ defaultInput, defaultCustomColors }) {
                 key: i,
                 stitches,
                 colors,
-                className: repeat
-                  ? `shrink-0 transition-[width] w-1/6 w-${zoom}/6`
-                  : 'w-full',
+                className:
+                  'shrink-0 min-w-0 h-auto ' +
+                  (repeat ? `transition-[width] w-1/6 w-${zoom}/6` : 'w-full'),
                 onClick: (colorKey) => {
                   setStagedColors((prev) => ({
                     ...prev,
