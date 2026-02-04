@@ -380,14 +380,23 @@ function ColorPicker({
   const isActive = !!stagedColor
 
   useEffect(() => {
-    if (pickerRef.current) {
+    if (pickerRef.current && isActive) {
+      // Remove any previous ColorPicker
+      pickerRef.current.innerHTML = ''
+      // Sometimes clientWidth is rounded up when actual width is not an
+      // integer, so subtract 1 ¯\_(ツ)_/¯
+      const width = pickerRef.current.clientWidth - 1
+
       const picker = new iro.ColorPicker(pickerRef.current, {
-        width: 144, // .w-48
+        width: width,
         margin: 'var(--spacing)', // .gap-1
         color: defaultColor,
-        layoutDirection: 'horizontal',
+        layoutDirection: 'vertical',
         layout: [
-          { component: iro.ui.Box },
+          {
+            component: iro.ui.Box,
+            options: { boxHeight: (width * 2) / 3 },
+          },
           { component: iro.ui.Slider, options: { sliderType: 'hue' } },
         ],
       })
@@ -406,50 +415,24 @@ function ColorPicker({
     createElement(
       'div',
       {
-        className:
-          'flex gap-1 m-1 transition-[height] ' + (isActive ? 'h-36' : 'h-8'),
+        className: 'flex gap-1 m-1 min-w-30',
       },
-      createElement(
-        'div',
+      Button(
         {
-          className:
-            'h-full rounded-sm flex flex-col gap-1 ' +
-            (isActive ? 'w-12' : `w-full`),
+          className: `border-0 rounded-sm flex-1 bg-[${stagedColor || defaultColor}]`,
+          onClick: isActive
+            ? () => onSubmit(stagedColor)
+            : () => onChange(defaultColor),
         },
-        Button(
-          {
-            className: `border-0 rounded-sm w-full flex-2 bg-[${stagedColor || defaultColor}]`,
-            onClick: isActive
-              ? () => onSubmit(stagedColor)
-              : () => onChange(defaultColor),
-          },
-          isActive && Icon('check'),
-        ),
-        isActive &&
-          Button(
-            {
-              className: `border-0 rounded-sm w-full flex-1 bg-[${defaultColor}]`,
-              onClick: () => onSubmit(defaultColor),
-            },
-            Icon('close'),
-          ),
+        isActive && Icon('check'),
       ),
       isActive &&
-        createElement(
-          'div',
+        Button(
           {
-            ref: pickerRef,
-            className: 'h-36',
+            className: `border-0 rounded-sm bg-[${defaultColor}]`,
+            onClick: () => onSubmit(defaultColor),
           },
-          // Some iro style properties are not configurable. Apply them this way
-          // instead.
-          // Support for inline <style> is not guaranteed but this
-          // will degrade gracefully.
-          createElement(
-            'style',
-            {},
-            '.IroBox, .IroSlider, .IroSliderGradient { border-radius: var(--radius-sm) !important }',
-          ),
+          Icon('close'),
         ),
       !isActive &&
         createElement(
@@ -460,6 +443,34 @@ function ColorPicker({
           },
           Icon('drag_indicator'),
         ),
+    ),
+    createElement(
+      'div',
+      {
+        className:
+          // Use max-height so transition animates but height is fit to
+          // content.
+          'mx-1 overflow-hidden transition-[max-height] ' +
+          (isActive ? 'my-1 max-h-96' : 'my-0 max-h-0'),
+      },
+      createElement(
+        'div',
+        {
+          ref: pickerRef,
+          // 0 width when closed so button can still shrink when previously
+          // rendered picker is present.
+          className: isActive ? '' : 'w-0',
+        },
+        // Some iro style properties are not configurable. Apply them this way
+        // instead.
+        // Support for inline <style> is not guaranteed but this
+        // will degrade gracefully.
+        createElement(
+          'style',
+          {},
+          '.IroBox, .IroSlider, .IroSliderGradient { border-radius: var(--radius-sm) !important }',
+        ),
+      ),
     ),
   )
 }
@@ -562,7 +573,7 @@ function ColorInputs({
     'div',
     {
       ref: colorInputsRef,
-      className: 'w-full grid gap-x-2 gap-y-1',
+      className: 'flex-1 grid gap-x-2 gap-y-1',
       style: { gridTemplateColumns: 'auto 1fr' },
     },
     colorRows,
@@ -707,7 +718,7 @@ function App({ defaultInput, defaultCustomColors }) {
 
     createElement(
       'div',
-      { className: 'w-auto overflow-auto min-w-1/4' },
+      { className: 'w-1/3 max-w-96 overflow-auto' },
       createElement(
         'div',
         { className: 'join join-vertical my-4 w-full' },
@@ -742,7 +753,7 @@ function App({ defaultInput, defaultCustomColors }) {
           },
           createElement(
             'div',
-            { className: 'flex flex-col items-end gap-1' },
+            { className: 'flex flex-wrap justify-end gap-2' },
             createElement(ColorInputs, {
               colors: { ...defaultColors, ...customColors },
               stagedColors,
