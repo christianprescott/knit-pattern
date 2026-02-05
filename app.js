@@ -675,7 +675,7 @@ function App({ defaultInput, defaultCustomColors }) {
     { className: 'flex gap-4 px-4 h-screen' },
     createElement(
       'div',
-      { className: 'relative flex-1 h-full' },
+      { className: 'flex-1 h-full' },
       createElement(
         'div',
         { className: 'overflow-auto h-full flex justify-center items-start' },
@@ -709,11 +709,6 @@ function App({ defaultInput, defaultCustomColors }) {
             ),
         ),
       ),
-      createElement(
-        'div',
-        { className: 'absolute bottom-4 right-4' },
-        createElement(ShareButton),
-      ),
     ),
 
     createElement(
@@ -721,7 +716,7 @@ function App({ defaultInput, defaultCustomColors }) {
       { className: 'w-1/3 max-w-96 overflow-auto' },
       createElement(
         'div',
-        { className: 'join join-vertical my-4 w-full' },
+        { className: 'join join-vertical mt-4 mb-16 w-full' },
         Collapse(
           {
             open: Object.keys(defaultCustomColors).length === 0,
@@ -789,6 +784,13 @@ function App({ defaultInput, defaultCustomColors }) {
         ),
       ),
     ),
+
+    createElement(
+      'div',
+      { className: 'absolute bottom-4 right-4 z-10' },
+      createElement(ShareButton),
+    ),
+
     Modal(
       {
         open: showHelpModal,
