@@ -675,7 +675,7 @@ function App({ defaultInput, defaultCustomColors }) {
     { className: 'flex gap-4 px-4 h-screen' },
     createElement(
       'div',
-      { className: 'flex-1 h-full' },
+      { className: 'flex-2 h-full' },
       createElement(
         'div',
         { className: 'overflow-auto h-full flex justify-center items-start' },
@@ -713,7 +713,7 @@ function App({ defaultInput, defaultCustomColors }) {
 
     createElement(
       'div',
-      { className: 'w-1/3 max-w-96 overflow-auto' },
+      { className: 'flex-1 min-w-46 max-w-96 overflow-auto' },
       createElement(
         'div',
         { className: 'join join-vertical mt-4 mb-16 w-full' },
