@@ -74,6 +74,24 @@ const deleteUrlParams = (func) => {
   history.replaceState(null, '', newUrl)
 }
 
+const generatePatternNames = async (canvas) => {
+  // Convert canvas to base64 image
+  const imageData = canvas
+    .toDataURL('image/png')
+    .replace(/^data:image\/png;base64,/, '')
+
+  const response = await fetch('/api/names', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      image_data: imageData,
+    }),
+  })
+  return response.json()
+}
+
 const { createElement, useState, useRef, useEffect } = React
 
 function Icon(name) {
@@ -122,8 +140,12 @@ function Cell({ colorKey, ...props }) {
   )
 }
 
-function StitchContainer({ stitches, colors, onClick, ...props }) {
-  const canvasRef = useRef(null)
+const StitchContainer = React.forwardRef(function StitchContainer(
+  { stitches, colors, onClick, ...props },
+  ref,
+) {
+  const internalRef = useRef(null)
+  const canvasRef = ref || internalRef
 
   const rows = stitches.length
   const cols = Math.max(...stitches.map((r) => r.length))
@@ -189,7 +211,7 @@ function StitchContainer({ stitches, colors, onClick, ...props }) {
     onClick: handleClick,
     ...props,
   })
-}
+})
 
 function AutoTextArea({ onChange, className, ...props }) {
   const textareaRef = useRef(null)
@@ -304,6 +326,41 @@ function Button(
       ...props,
     },
     ...children,
+  )
+}
+
+function NamesButton({ canvasRef }) {
+  const [names, setNames] = useState([])
+
+  const onClick = () => {
+    if (canvasRef && canvasRef.current) {
+      setNames(null)
+      generatePatternNames(canvasRef.current)
+        .then((names) => setNames(names))
+        .catch(() => setNames([]))
+    }
+  }
+
+  return Button(
+    {
+      size: 'xs',
+      color: 'secondary',
+      className: 'shadow-md/30',
+      onClick,
+    },
+    '?',
+    names === null &&
+      createElement('span', { className: 'loading loading-dots loading-xs' }),
+    !!names?.length &&
+      createElement(
+        'span',
+        { className: 'text-rotate' },
+        createElement(
+          'span',
+          {},
+          ...names.map((n, i) => createElement('span', { key: i }, n)),
+        ),
+      ),
   )
 }
 
@@ -622,6 +679,18 @@ function App({ defaultInput, defaultCustomColors }) {
   const [zoom, setZoom] = useState(6)
   const [repeat, setRepeat] = useState(false)
   const [showHelpModal, setShowHelpModal] = useState(false)
+  const [hasBackend, setHasBackend] = useState(false)
+  const canvasRef = useRef(null)
+
+  useEffect(async () => {
+    try {
+      const response = await fetch('/health')
+      const data = await response.json()
+      setHasBackend(true)
+    } catch {
+      setHasBackend(false)
+    }
+  }, [])
 
   const onInputChanged = (input) => {
     setStitches(parseStitches(input))
@@ -695,6 +764,7 @@ function App({ defaultInput, defaultCustomColors }) {
                 key: i,
                 stitches,
                 colors,
+                ref: i === 0 ? canvasRef : null,
                 className:
                   'shrink-0 min-w-0 h-auto ' +
                   (repeat ? `transition-[width] w-1/6 w-${zoom}/6` : 'w-full'),
@@ -787,7 +857,8 @@ function App({ defaultInput, defaultCustomColors }) {
 
     createElement(
       'div',
-      { className: 'absolute bottom-4 right-4 z-10' },
+      { className: 'absolute bottom-4 right-4 z-10 flex items-end gap-1' },
+      hasBackend && createElement(NamesButton, { canvasRef: canvasRef }),
       createElement(ShareButton),
     ),
 
