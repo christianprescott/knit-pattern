@@ -10,6 +10,7 @@ A static web app for designing knitting patterns and choosing yarn colors.
 - [ ] Header, footer, about page with attributions, privacy policy page
 - [ ] Pattern recognition via image upload or camera capture. See branch `image` for a POC uing OpenCV.
 - [ ] Render cells as rectangle/dot/stitch/other. If only for faster rendering performance.
+- [ ] Resize canvas image before uploading to Claude per https://platform.claude.com/docs/en/build-with-claude/vision
 
 ## Development
 
