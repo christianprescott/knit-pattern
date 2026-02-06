@@ -33,10 +33,11 @@ if not API_KEY:
     raise RuntimeError("ANTHROPIC_API_KEY not configured")
 
 prompt = """
-This image depicts a knitting pattern.
-Look at this pattern and suggest 2-4 names for it based on what you see visually.
-Consider the shapes, repetition, colors, and overall aesthetic. The names should describe any simple shapes if present, then be creative or evocative. Names should be three words or less.
-Respond with the names only, no other content.
+This image depicts a knitting pattern. Look at this pattern and suggest 2-4 names for it based on what you see visually.
+The image appears as a grid of cells but the presence of the cells and borders should be minimized in your visualization. Avoid descriptors like "grid", "tiles", "squares", or similar.
+Imagine the pattern having a more organic appearance when knitted.
+Consider the colors, repetition, and overall aesthetic. The names should describe any simple shapes if present, then be creative or evocative. Names must be three words or less.
+Respond with the names array only, no other content.
 """
 
 class NamesRequest(BaseModel):
