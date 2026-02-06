@@ -83,7 +83,7 @@ async def create_names(request: NamesRequest):
 async def health():
     return {"status": "ok"}
 
-app.mount("/", StaticFiles(directory=".", html=True), name="static")
+app.mount("/", StaticFiles(directory="./assets", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn

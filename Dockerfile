@@ -6,8 +6,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy server code
-COPY index.html app.js server.py .
+COPY server.py .
+COPY assets ./assets
 
 # Expose port
 EXPOSE 8080
