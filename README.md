@@ -15,10 +15,20 @@ A static web app for designing knitting patterns and choosing yarn colors.
 
 Open index.html in a browser. Make changes to app.js and reload the page.
 
-It's not necessary to install dependencies to load the page and run the app.
+The app is designed to run without a compilation step or web server so it's not necessary to install dependencies to load the page and run the app.
+
+### Web Server
+
+Optionally, run the web server. Additional features will be made available when the app detects the server is present.
 
 ```sh
-# lint
+docker build -t knit-pattern .
+docker run --rm -p 8080:8080 -e RELOAD=1 -e ANTHROPIC_API_KEY='your-api-key' -v "${PWD}:/app"  knit-pattern
+```
+
+### Lint
+
+```sh
 npm run format
 ```
 
