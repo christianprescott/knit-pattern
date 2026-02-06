@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from http import HTTPStatus
@@ -14,6 +14,19 @@ logging.basicConfig(
 )
 
 app = FastAPI()
+
+# Limit request body size
+MAX_REQUEST_SIZE = 1024 * 1024  # 1MB
+@app.middleware("http")
+async def limit_body_size(request: Request, call_next):
+    if request.method in ["POST", "PUT", "PATCH"]:
+        content_length = request.headers.get("content-length")
+        if content_length and int(content_length) > MAX_REQUEST_SIZE:
+            raise HTTPException(
+                status_code=HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+                detail=f"Request body too large: {int(content_length) / 1024 / 1024:.1f}MB (max {MAX_REQUEST_SIZE / 1024 / 1024}MB)"
+            )
+    return await call_next(request)
 
 API_KEY = os.getenv("ANTHROPIC_API_KEY")
 if not API_KEY:
