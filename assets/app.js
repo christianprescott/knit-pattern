@@ -226,7 +226,7 @@ function Collapse({ title, ...props }, ...children) {
     createElement(
       'summary',
       { className: 'collapse-title' },
-      createElement('h2', { className: 'text-3xl' }, title),
+      createElement('h2', { className: 'text-3xl select-none' }, title),
     ),
     createElement('div', { className: 'collapse-content' }, ...children),
   )
@@ -446,26 +446,13 @@ function Button(
   )
 }
 
-function NamesButton({ canvasRef }) {
-  const [names, setNames] = useState([])
-
-  const onClick = () => {
-    if (canvasRef && canvasRef.current) {
-      setNames(null)
-      generatePatternNames(canvasRef.current)
-        .then((names) => setNames(names))
-        .catch(() => setNames([]))
-    }
-  }
-
-  return Button(
+function NamesBadge({ names }) {
+  return createElement(
+    'div',
     {
-      size: 'xs',
-      color: 'secondary',
-      className: 'shadow-md/30',
-      onClick,
+      className:
+        'badge badge-sm badge-secondary badge-soft select-none shadow-md/30',
     },
-    '?',
     names === null &&
       createElement('span', { className: 'loading loading-dots loading-xs' }),
     !!names?.length &&
@@ -481,8 +468,11 @@ function NamesButton({ canvasRef }) {
   )
 }
 
-function ShareButton() {
+function ShareButton({ names }) {
   const [showCopied, setShowCopied] = useState(false)
+
+  const name =
+    names?.length > 0 ? names[Math.floor(Math.random() * names.length)] : 'knit'
 
   const handleShare = () => {
     const url = window.location.href
@@ -490,7 +480,7 @@ function ShareButton() {
     return navigator
       .share({
         title: 'Knitpicker Pattern',
-        text: 'Check out this knit pattern!',
+        text: `Check out this ${name} pattern!`,
         url: url,
       })
       .catch((err) => {
@@ -797,6 +787,7 @@ function App({ defaultInput, defaultCustomColors }) {
   const [repeat, setRepeat] = useState(false)
   const [showHelpModal, setShowHelpModal] = useState(false)
   const [hasBackend, setHasBackend] = useState(false)
+  const [generatedNames, setGeneratedNames] = useState([])
   const canvasRef = useRef(null)
   // Snapshot of previous app state used for change detection
   const snapshotRef = useRef(null)
@@ -832,26 +823,27 @@ function App({ defaultInput, defaultCustomColors }) {
       colors: { ...defaultColors, ...customColors },
       timestamp: Date.now(),
     }
-  }, [])
+    console.debug('[Snapshot]', 'init', snapshotRef.current)
+    generateNames()
+  }, [hasBackend])
 
   // Periodic significant change detection
   useEffect(() => {
     const interval = setInterval(() => {
       if (!snapshotRef.current) return
 
-      const changedColors = { ...defaultColors, ...customColors }
-      const result = detectSignificantChange(
-        { stitches, colors: changedColors },
-        snapshotRef.current,
-      )
+      const newSnapshot = {
+        stitches,
+        colors: { ...defaultColors, ...customColors },
+        timestamp: Date.now(),
+      }
+      console.debug('[Snapshot]', 'interval', newSnapshot)
 
+      const result = detectSignificantChange(newSnapshot, snapshotRef.current)
       if (result.significant) {
-        // Update snapshot
-        snapshotRef.current = {
-          stitches,
-          colors: changedColors,
-          timestamp: Date.now(),
-        }
+        console.debug('[Snapshot]', 'update', result)
+        snapshotRef.current = newSnapshot
+        generateNames()
       }
     }, 2000)
 
@@ -887,6 +879,15 @@ function App({ defaultInput, defaultCustomColors }) {
       ...customColors,
       ...changes,
     })
+  }
+
+  const generateNames = () => {
+    if (hasBackend && canvasRef && canvasRef.current) {
+      setGeneratedNames(null)
+      generatePatternNames(canvasRef.current)
+        .then((names) => setGeneratedNames(names))
+        .catch(() => setGeneratedNames([]))
+    }
   }
 
   const repetitions = repeat ? Math.ceil(6 / zoom) : 1
@@ -1010,8 +1011,8 @@ function App({ defaultInput, defaultCustomColors }) {
     createElement(
       'div',
       { className: 'absolute bottom-4 right-4 z-10 flex items-end gap-1' },
-      hasBackend && createElement(NamesButton, { canvasRef: canvasRef }),
-      createElement(ShareButton),
+      hasBackend && createElement(NamesBadge, { names: generatedNames }),
+      createElement(ShareButton, { names: generatedNames }),
     ),
 
     Modal(
