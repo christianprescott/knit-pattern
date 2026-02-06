@@ -894,13 +894,19 @@ function App({ defaultInput, defaultCustomColors }) {
 
   return createElement(
     'div',
-    { className: 'flex gap-4 px-4 h-screen' },
+    // The use of .gutter-stable creates unwanted padding on some browsers but
+    // not others. I would prefer gap-4 between the pattern and sidebar but
+    // using gap-2 as a compromise.
+    { className: 'flex gap-2 px-4 h-screen' },
     createElement(
       'div',
       { className: 'flex-2 h-full' },
       createElement(
         'div',
-        { className: 'overflow-auto h-full flex justify-center items-start' },
+        {
+          className:
+            'overflow-auto gutter-stable h-full flex justify-center items-start',
+        },
         createElement(
           'div',
           {
@@ -936,7 +942,7 @@ function App({ defaultInput, defaultCustomColors }) {
 
     createElement(
       'div',
-      { className: 'flex-1 min-w-46 max-w-96 overflow-auto' },
+      { className: 'flex-1 min-w-46 max-w-96 overflow-auto gutter-stable' },
       createElement(
         'div',
         { className: 'join join-vertical mt-4 mb-16 w-full' },
