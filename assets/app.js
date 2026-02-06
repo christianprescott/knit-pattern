@@ -53,6 +53,123 @@ parseStitches = (input) => {
   return rows
 }
 
+/******** begin change detection functions ********/
+// These functions are authored by AI. They were reviewed but may need tuning.
+
+// Levenshtein distance calculation for edit distance detection
+levenshteinDistance = (str1, str2) => {
+  const m = str1.length
+  const n = str2.length
+  const dp = Array(m + 1)
+    .fill(null)
+    .map(() => Array(n + 1).fill(0))
+
+  for (let i = 0; i <= m; i++) dp[i][0] = i
+  for (let j = 0; j <= n; j++) dp[0][j] = j
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (str1[i - 1] === str2[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1]
+      } else {
+        dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
+      }
+    }
+  }
+  return dp[m][n]
+}
+
+// Compare pattern structures for significant changes using Levenshtein distance
+comparePatterns = (current, snapshot) => {
+  if (!snapshot) {
+    return { significant: false, reason: 'no_snapshot', score: 0 }
+  }
+
+  const currentRows = current.length
+  const snapshotRows = snapshot.length
+  const maxRows = Math.max(currentRows, snapshotRows)
+
+  // Handle empty patterns
+  if (maxRows === 0) {
+    return { significant: false, reason: 'no_snapshot', score: 0 }
+  }
+
+  let totalDistance = 0
+  for (let i = 0; i < maxRows; i++) {
+    const currentRow = (current[i] || []).join('')
+    const snapshotRow = (snapshot[i] || []).join('')
+    const distance = levenshteinDistance(currentRow, snapshotRow)
+    const normalized =
+      distance / Math.max(currentRow.length, snapshotRow.length, 1)
+    totalDistance += normalized
+  }
+  const avgDistance = totalDistance / maxRows
+
+  if (avgDistance > 0.4) {
+    return { significant: true, reason: 'pattern_edit', score: avgDistance }
+  }
+
+  return {
+    significant: false,
+    reason: 'minor_pattern_change',
+    score: avgDistance,
+  }
+}
+
+// Compare color changes using CIELAB perceptual distance via chroma-js
+compareColors = (current, snapshot) => {
+  if (!snapshot || Object.keys(snapshot).length === 0) {
+    return { significant: false, reason: 'no_snapshot', score: 0 }
+  }
+
+  const allKeys = new Set([...Object.keys(current), ...Object.keys(snapshot)])
+  let maxDeltaE = 0
+  let sumDeltaE = 0
+
+  for (const key of allKeys) {
+    if (current[key] && snapshot[key]) {
+      const lab1 = chroma(current[key]).lab()
+      const lab2 = chroma(snapshot[key]).lab()
+      const de = chroma.deltaE(lab1, lab2)
+
+      maxDeltaE = Math.max(maxDeltaE, de)
+      sumDeltaE += de
+    }
+  }
+
+  const avgDeltaE = sumDeltaE / Math.max(allKeys.size, 1)
+
+  if (maxDeltaE > 20) {
+    return { significant: true, reason: 'large_color_change', score: maxDeltaE }
+  }
+
+  if (avgDeltaE > 10) {
+    return { significant: true, reason: 'many_color_changes', score: avgDeltaE }
+  }
+
+  return {
+    significant: false,
+    reason: 'minor_color_adjustment',
+    score: avgDeltaE,
+  }
+}
+
+// Orchestrate pattern and color comparison
+detectSignificantChange = (current, snapshot) => {
+  const patternResult = comparePatterns(current.stitches, snapshot.stitches)
+  if (patternResult.significant) {
+    return patternResult
+  }
+
+  const colorResult = compareColors(current.colors, snapshot.colors)
+  if (colorResult.significant) {
+    return colorResult
+  }
+
+  return { significant: false, reason: 'no_significant_change', score: 0 }
+}
+/******** end change detection functions ********/
+
 const updateUrlParams = (updates) => {
   const params = new URLSearchParams(window.location.search)
   for (const [key, value] of Object.entries(updates)) {
@@ -681,6 +798,8 @@ function App({ defaultInput, defaultCustomColors }) {
   const [showHelpModal, setShowHelpModal] = useState(false)
   const [hasBackend, setHasBackend] = useState(false)
   const canvasRef = useRef(null)
+  // Snapshot of previous app state used for change detection
+  const snapshotRef = useRef(null)
 
   useEffect(async () => {
     try {
@@ -691,6 +810,53 @@ function App({ defaultInput, defaultCustomColors }) {
       setHasBackend(false)
     }
   }, [])
+
+  // Select default colors
+  const colorKeys = [...new Set(stitches.flat())].sort()
+  const defaultColors = Object.fromEntries(
+    colorKeys.map((colorKey, i) => {
+      const lightness = Math.floor((128 * i) / (colorKeys.length - 1))
+      const rb = lightness.toString(16).padStart(2, '0')
+      const g = Math.round(64 + lightness)
+        .toString(16)
+        .padStart(2, '0')
+      return [colorKey, `#${rb}${g}${rb}`]
+    }),
+  )
+  const colors = { ...defaultColors, ...customColors, ...stagedColors }
+
+  // Initialize snapshot
+  useEffect(() => {
+    snapshotRef.current = {
+      stitches,
+      colors: { ...defaultColors, ...customColors },
+      timestamp: Date.now(),
+    }
+  }, [])
+
+  // Periodic significant change detection
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!snapshotRef.current) return
+
+      const changedColors = { ...defaultColors, ...customColors }
+      const result = detectSignificantChange(
+        { stitches, colors: changedColors },
+        snapshotRef.current,
+      )
+
+      if (result.significant) {
+        // Update snapshot
+        snapshotRef.current = {
+          stitches,
+          colors: changedColors,
+          timestamp: Date.now(),
+        }
+      }
+    }, 2000)
+
+    return () => clearInterval(interval)
+  }, [stitches, customColors, defaultColors])
 
   const onInputChanged = (input) => {
     setStitches(parseStitches(input))
@@ -722,20 +888,6 @@ function App({ defaultInput, defaultCustomColors }) {
       ...changes,
     })
   }
-
-  // Select default colors
-  const colorKeys = [...new Set(stitches.flat())].sort()
-  const defaultColors = Object.fromEntries(
-    colorKeys.map((colorKey, i) => {
-      const lightness = Math.floor((128 * i) / (colorKeys.length - 1))
-      const rb = lightness.toString(16).padStart(2, '0')
-      const g = Math.round(64 + lightness)
-        .toString(16)
-        .padStart(2, '0')
-      return [colorKey, `#${rb}${g}${rb}`]
-    }),
-  )
-  const colors = { ...defaultColors, ...customColors, ...stagedColors }
 
   const repetitions = repeat ? Math.ceil(6 / zoom) : 1
 
