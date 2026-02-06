@@ -41,3 +41,13 @@ npm test
 # or if you're container-inclined:
 docker run --rm -t -v "$(pwd):/app" -w /app node:18 npm test
 ```
+
+## Deployment
+
+The app is deployed to fly.io. The fly-deploy.yml GH Action deploys with each push to master. Use `fly tokens create deploy --expiry 8760h` to regenerate the FLY_API_TOKEN secret used for the Action.
+
+Or deploy from CLI:
+
+```sh
+flyctl deploy
+```
