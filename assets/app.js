@@ -828,6 +828,8 @@ function App({ defaultInput, defaultCustomColors }) {
   }, [hasBackend])
 
   // Periodic significant change detection
+  // This effect is "debounced" because it clears and resets the interval when
+  // any of its dependencies change.
   useEffect(() => {
     const interval = setInterval(() => {
       if (!snapshotRef.current) return
