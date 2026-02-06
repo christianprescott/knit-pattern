@@ -4,8 +4,13 @@ from pydantic import BaseModel
 from http import HTTPStatus
 import httpx
 import os
+import logging
 from typing import List, Dict, Any
 from functools import reduce
+
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "WARNING"),
+)
 
 app = FastAPI()
 
@@ -71,11 +76,11 @@ async def create_names(request: NamesRequest):
                     "tool_choice": { "type": "tool", "name": "pattern_names" }
                 },
             )
-            response.raise_for_status()
-            tool_uses = filter(lambda m: m.get("type") == "tool_use", response.json().get("content"))
+            json = response.raise_for_status().json()
+            logging.debug(json)
+            tool_uses = filter(lambda m: m.get("type") == "tool_use", json.get("content"))
             tool_inputs = map(lambda m: m.get("input").get("names"), tool_uses)
-            flat = reduce(lambda x, y: x + y, tool_inputs)
-            return list(flat)
+            return list(reduce(lambda x, y: x + y, tool_inputs))
     except httpx.HTTPStatusError as e:
         raise HTTPException(status_code=HTTPStatus.BAD_GATEWAY)
 

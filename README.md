@@ -23,7 +23,7 @@ Optionally, run the web server. Additional features will be made available when 
 
 ```sh
 docker build -t knit-pattern .
-docker run --rm -p 8080:8080 -e RELOAD=1 -e ANTHROPIC_API_KEY='your-api-key' -v "${PWD}:/app"  knit-pattern
+docker run --rm -p 8080:8080 -e RELOAD=1 -e LOG_LEVEL=DEBUG -e ANTHROPIC_API_KEY='your-api-key' -v "${PWD}:/app"  knit-pattern
 ```
 
 ### Lint
