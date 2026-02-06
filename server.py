@@ -84,6 +84,7 @@ async def create_names(request: NamesRequest):
             tool_inputs = map(lambda m: json.loads(m.get("text")).get("names"), tool_uses)
             return list(reduce(lambda x, y: x + y, tool_inputs))
     except httpx.HTTPStatusError as e:
+        logging.error(e.response.text)
         raise HTTPException(status_code=HTTPStatus.BAD_GATEWAY)
 
 @app.get("/health")
